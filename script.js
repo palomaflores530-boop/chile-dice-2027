@@ -96,7 +96,8 @@ function paintResult(prefix,isPublicMode){
 }
 function renderRoundResult(isPublicMode){
  const id=isPublicMode?"publicRoundResultOverlay":"roundResultOverlay",el=$(id);if(!el)return;
- if(state.roundResult)paintResult("",isPublicMode);else el.classList.add("hidden");
+ if(state.roundResult){el.classList.remove("hidden");el.style.setProperty("display","grid","important");paintResult("",isPublicMode);}
+ else{el.classList.add("hidden");el.style.removeProperty("display");}
 }
 function continueFromResult(){nextRound()}
 
@@ -113,6 +114,7 @@ function finishRound(team,message){
  state.roundResult={round:state.round,teams:[...state.teams],winner:team,points:[team===0?state.awardedPoints:0,team===1?state.awardedPoints:0],totals:[...state.scores],stamp:String(Date.now())+"-"+state.round+"-"+Math.random().toString(36).slice(2)};
  setStatus(message+(team===null?"":" "+state.teams[team]+" gana "+state.awardedPoints+" puntos de la ronda."));
  save();
+ renderRoundResult(false);
 }
 function steal(correctAnswer){
  if(state.phase!=="steal")return;
@@ -129,7 +131,7 @@ function steal(correctAnswer){
  }
 }
 function resetRound(){if(state.awardedTeam!==null&&state.awardedTeam!==undefined)state.scores[state.awardedTeam]=Math.max(0,state.scores[state.awardedTeam]-state.awardedPoints);state.roundResult=null;state.revealed=[];state.strikes=0;state.turn=null;state.phase="duel";state.stealTeam=null;state.awardedTeam=null;state.awardedPoints=0;state.status="Ronda reiniciada. Selecciona quién ganó el duelo inicial.";state.finished=false;save()}
-function nextRound(){if(state.phase!=="finished-round"&&!state.finalDuel?.active){toast("Finaliza la ronda antes de continuar.");return}state.roundResult=null;if(state.round>=ROUNDS.length-1){state.finished=true;state.finalDuel=state.finalDuel||{active:false,started:false,names:["",""],scores:[0,0],index:0,remaining:20,deadline:null,done:false,tieBreak:false};state.finalDuel.active=true;state.status="¡Comienza el duelo final!";save();return}state.round++;state.revealed=[];state.strikes=0;state.turn=null;state.phase="duel";state.stealTeam=null;state.awardedTeam=null;state.awardedPoints=0;state.status="Nueva ronda. Selecciona quién ganó el duelo inicial.";save()}
+function nextRound(){if(state.phase!=="finished-round"&&!state.finalDuel?.active){toast("Finaliza la ronda antes de continuar.");return}["roundResultOverlay","publicRoundResultOverlay"].forEach(id=>{const el=$(id);if(el){el.classList.add("hidden");el.style.removeProperty("display")}});state.roundResult=null;if(state.round>=ROUNDS.length-1){state.finished=true;state.finalDuel=state.finalDuel||{active:false,started:false,names:["",""],scores:[0,0],index:0,remaining:20,deadline:null,done:false,tieBreak:false};state.finalDuel.active=true;state.status="¡Comienza el duelo final!";save();return}state.round++;state.revealed=[];state.strikes=0;state.turn=null;state.phase="duel";state.stealTeam=null;state.awardedTeam=null;state.awardedPoints=0;state.status="Nueva ronda. Selecciona quién ganó el duelo inicial.";save()}
 function resetGame(){if(!confirm("¿Reiniciar toda la partida y borrar los puntajes?"))return;state=freshState();save()}
 function openPublic(){const url=new URL(location.href);url.searchParams.set("public","1");window.open(url.toString(),"CHILE_DICE_PUBLICO","width=1200,height=850")}
 function init(){try{if("BroadcastChannel" in window){publicChannel=new BroadcastChannel("chile-dice-live");}}catch(e){}if(isPublic){$("hostApp").classList.add("hidden");$("publicApp").classList.remove("hidden");$("publicContinueRound").addEventListener("click",continueFromResult);$("publicEnableResultSound").addEventListener("click",enableResultSound);lastPublicStrikes=state.strikes;lastPublicResultStamp=state.lastResultEvent?.stamp||0;renderPublic();if(publicChannel)publicChannel.onmessage=e=>{const m=e.data||{};if(m.type==="strike"&&m.round===state.round){animateErrorFlash();}if(m.type==="steal-result"&&m.round===state.round){animateStealResult(!!m.success);}};window.addEventListener("storage",e=>{if(e.key==="chile-dice-result-event"&&e.newValue){try{const event=JSON.parse(e.newValue);if(event.type==="steal-result"&&event.round===state.round)animateStealResult(!!event.success);}catch(err){}}if(e.key===KEY&&e.newValue){const incoming=JSON.parse(e.newValue);if(incoming.round!==state.round)lastPublicStrikes=0;const newStrike=incoming.strikes>lastPublicStrikes;const resultEvent=incoming.lastResultEvent;const newResult=!!(resultEvent&&resultEvent.stamp&&resultEvent.stamp!==lastPublicResultStamp);state=incoming;renderPublic();if(newStrike)animateErrorFlash();if(newResult){animateStealResult(!!resultEvent.success);lastPublicResultStamp=resultEvent.stamp;}lastPublicStrikes=state.strikes}});window.addEventListener("focus",()=>{const incoming=loadState();if(incoming.round!==state.round)lastPublicStrikes=0;const newStrike=incoming.strikes>lastPublicStrikes;const resultEvent=incoming.lastResultEvent;const newResult=!!(resultEvent&&resultEvent.stamp&&resultEvent.stamp!==lastPublicResultStamp);state=incoming;renderPublic();if(newStrike)animateErrorFlash();if(newResult){animateStealResult(!!resultEvent.success);lastPublicResultStamp=resultEvent.stamp;}lastPublicStrikes=state.strikes});return}
