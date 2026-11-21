@@ -38,6 +38,8 @@ function gameTone(freq,duration,type,volume,when,detune=0){const ctx=getGameAudi
 function playAnswerTick(){const ctx=getGameAudio();if(!ctx)return;const t=ctx.currentTime;gameTone(880,.11,"sine",.11,t);gameTone(1320,.16,"sine",.075,t+.075)}
 function animateAnswerReveal(event){
  if(!isPublic||!event||event.round!==state.round)return;
+ if(window.lastRevealStamp===event.stamp)return;
+ window.lastRevealStamp=event.stamp;
  const showReveal=()=>{
   if(!isPublic||event.round!==state.round)return;
   const overlay=$("answerRevealOverlay");if(!overlay)return;
@@ -50,17 +52,29 @@ function animateAnswerReveal(event){
   window.answerRevealTimer=setTimeout(()=>{overlay.classList.remove("play");overlay.classList.add("hidden")},5000);
  };
  const suspense=$("audio-suspenso");
- if(!suspense){showReveal();return;}
- try{
-  suspense.pause();suspense.currentTime=0;
-  let finished=false;
-  const finish=()=>{if(finished)return;finished=true;clearTimeout(window.suspenseFallbackTimer);suspense.onended=null;showReveal();};
-  suspense.onended=finish;
-  const duration=Number.isFinite(suspense.duration)&&suspense.duration>0?suspense.duration:8;
-  window.suspenseFallbackTimer=setTimeout(finish,(duration+1)*1000);
-  const playback=suspense.play();
-  if(playback&&playback.catch)playback.catch(finish);
- }catch(e){showReveal();}
+ if(!suspense){setTimeout(showReveal,6000);return;}
+ let finished=false;
+ const finish=()=>{if(finished)return;finished=true;clearTimeout(window.suspenseFallbackTimer);suspense.onended=null;showReveal();};
+ const startSuspense=()=>{
+  try{
+   suspense.pause();suspense.currentTime=0;
+   const duration=Number.isFinite(suspense.duration)&&suspense.duration>0?suspense.duration:6;
+   suspense.onended=finish;
+   window.suspenseFallbackTimer=setTimeout(finish,(duration+0.35)*1000);
+   const playback=suspense.play();
+   if(playback&&playback.catch)playback.catch(()=>{});
+  }catch(e){
+   const duration=Number.isFinite(suspense.duration)&&suspense.duration>0?suspense.duration:6;
+   window.suspenseFallbackTimer=setTimeout(finish,(duration+0.35)*1000);
+  }
+ };
+ if(suspense.readyState>=1)startSuspense();
+ else{
+  const ready=()=>{suspense.removeEventListener("loadedmetadata",ready);startSuspense();};
+  suspense.addEventListener("loadedmetadata",ready);
+  suspense.load();
+  window.suspenseFallbackTimer=setTimeout(()=>{if(!finished){suspense.removeEventListener("loadedmetadata",ready);startSuspense();}},2500);
+ }
 }
 function sendAnswerReveal(index){
  const answer=ROUNDS[state.round].answers[index];
