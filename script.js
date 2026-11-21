@@ -29,7 +29,7 @@ function render(){if(isPublic){renderPublic();return}
  const opts='<option value="">Selecciona una respuesta</option>'+ROUNDS[state.round].answers.map((a,i)=>'<option value="'+i+'">'+(i+1)+'. '+escapeHtml(a[0])+' ('+a[1]+' pts)</option>').join("");
  $("answerSelect").innerHTML=opts;$("stealSelect").innerHTML=opts;
  $("correctBtn").disabled=state.phase!=="playing";$("wrongBtn").disabled=state.phase!=="playing";$("stealCorrect").disabled=state.phase!=="steal";$("stealWrong").disabled=state.phase!=="steal";
- $("nextRound").disabled=state.round>=5||!["finished-round","playing","duel","steal"].includes(state.phase);
+ $("nextRound").disabled=state.finished;$("nextRound").textContent=state.round>=5?"Finalizar partida →":"Siguiente ronda →";
  $("revealAll").disabled=state.phase==="finished-round";
  if(state.finished)showWinner();
 }
