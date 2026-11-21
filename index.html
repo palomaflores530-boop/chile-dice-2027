@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#071426">
   <title>CHILE DICE | Juego familiar</title>
   <link rel="stylesheet" href="styles.css?v=15">
-  <script src="script.js?v=27" defer></script>
+  <script src="script.js?v=28" defer></script>
 </head>
 <body>
   <main id="hostApp" class="app">
@@ -97,6 +97,15 @@
     <div class="result-flash" id="resultFlash" aria-hidden="true"></div>
     <section id="roundResultOverlay" class="round-result-overlay hidden" aria-live="polite"><div class="result-particles" id="resultParticles"></div><div class="round-result-card"><div class="result-brand"><span class="brand-mark">CH</span><div><p class="eyebrow gold">EL GRAN JUEGO FAMILIAR</p><h1>CHILE <b>DICE</b></h1></div></div><p class="eyebrow gold">RESULTADOS DE LA RONDA <span id="resultRoundNo">1</span></p><h2 class="result-headline" id="resultHeadline">¡TENEMOS RESULTADOS!</h2><div class="result-team-grid"><article class="result-team" id="resultTeamCardA"><span class="result-team-name" id="resultTeamNameA">EQUIPO 1</span><strong id="resultRoundPointsA">0</strong><small>PTS ESTA RONDA</small><span class="result-total">ACUMULADO <b id="resultTotalA">0</b></span></article><article class="result-team" id="resultTeamCardB"><span class="result-team-name" id="resultTeamNameB">EQUIPO 2</span><strong id="resultRoundPointsB">0</strong><small>PTS ESTA RONDA</small><span class="result-total">ACUMULADO <b id="resultTotalB">0</b></span></article></div><p class="result-winner-label" id="resultWinnerLabel">EQUIPO GANADOR</p><button class="btn btn-gold result-continue" id="continueRound">CONTINUAR A LA SIGUIENTE RONDA →</button><button class="btn btn-outline result-sound" id="enableResultSound">ACTIVAR SONIDO</button></div></section>
     <section id="publicRoundResultOverlay" class="round-result-overlay hidden" aria-live="polite"><div class="result-particles" id="publicResultParticles"></div><div class="round-result-card"><div class="result-brand"><span class="brand-mark">CH</span><div><p class="eyebrow gold">EL GRAN JUEGO FAMILIAR</p><h1>CHILE <b>DICE</b></h1></div></div><p class="eyebrow gold">RESULTADOS DE LA RONDA <span id="publicResultRoundNo">1</span></p><h2 class="result-headline" id="publicResultHeadline">¡TENEMOS RESULTADOS!</h2><div class="result-team-grid"><article class="result-team" id="publicResultTeamCardA"><span class="result-team-name" id="publicResultTeamNameA">EQUIPO 1</span><strong id="publicResultRoundPointsA">0</strong><small>PTS ESTA RONDA</small><span class="result-total">ACUMULADO <b id="publicResultTotalA">0</b></span></article><article class="result-team" id="publicResultTeamCardB"><span class="result-team-name" id="publicResultTeamNameB">EQUIPO 2</span><strong id="publicResultRoundPointsB">0</strong><small>PTS ESTA RONDA</small><span class="result-total">ACUMULADO <b id="publicResultTotalB">0</b></span></article></div><p class="result-winner-label" id="publicResultWinnerLabel">EQUIPO GANADOR</p><button class="btn btn-gold result-continue" id="publicContinueRound">CONTINUAR A LA SIGUIENTE RONDA →</button><button class="btn btn-outline result-sound" id="publicEnableResultSound">ACTIVAR SONIDO</button></div></section>
+    <audio id="audio-musicafondo" preload="auto" src="audio/musicafondo.mp3"></audio>
+    <audio id="audio-celebracion" preload="auto" src="audio/celebracion.mp3"></audio>
+    <audio id="audio-suspenso" preload="auto" src="audio/suspenso.mp3"></audio>
+    <audio id="audio-robofallido" preload="auto" src="audio/robofallido.mp3"></audio>
+    <audio id="audio-roboexitoso" preload="auto" src="audio/roboexitoso.mp3"></audio>
+    <audio id="audio-aparecelaX" preload="auto" src="audio/aparecelaX.mp3"></audio>
+    <audio id="audio-Respuestaincorrecta" preload="auto" src="audio/Respuestaincorrecta.mp3"></audio>
+    <audio id="audio-Respuestacorrecta" preload="auto" src="audio/Respuestacorrecta.mp3"></audio>
+    <audio id="audio-victoria" preload="auto" src="audio/victoria.mp3"></audio>
   <div class="toast" id="toast" role="status"></div>
 </body>
 </html>
