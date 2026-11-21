@@ -28,12 +28,17 @@ let lastPublicStrikes=0;
 let lastPublicResultStamp=0;
 let publicChannel=null;
 
-let gameAudioContext=null,gameMusicTimer=null,gameMusicStep=0,gameMusicOn=false;\nlet customMusicOn=false;\nfunction playCustomSound(name){const el=document.getElementById("audio-"+name);if(!el)return;try{el.pause();el.currentTime=0;const p=el.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}}\nfunction setCustomMusic(on){const el=$("audio-musicafondo");if(!el)return;customMusicOn=!!on;if(customMusicOn){el.loop=true;el.volume=.28;const p=el.play();if(p&&p.catch)p.catch(()=>{customMusicOn=false;});}else{el.pause();}const btn=$("publicMusicToggle");if(btn)btn.textContent=customMusicOn?"♫ MÚSICA: ACTIVADA":"♫ ACTIVAR MÚSICA";}\n
+let gameAudioContext=null,gameMusicTimer=null,gameMusicStep=0,gameMusicOn=false;
+let customMusicOn=false;
+function playCustomSound(name){const el=document.getElementById("audio-"+name);if(!el)return;try{el.pause();el.currentTime=0;const p=el.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}}
+function setCustomMusic(on){const el=$("audio-musicafondo");if(!el)return;customMusicOn=!!on;if(customMusicOn){el.loop=true;el.volume=.28;const p=el.play();if(p&&p.catch)p.catch(()=>{customMusicOn=false;});}else{el.pause();}const btn=$("publicMusicToggle");if(btn)btn.textContent=customMusicOn?"♫ MÚSICA: ACTIVADA":"♫ ACTIVAR MÚSICA";}
+
 function getGameAudio(){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;gameAudioContext=gameAudioContext||new C();if(gameAudioContext.state==="suspended")gameAudioContext.resume();return gameAudioContext}
 function gameTone(freq,duration,type,volume,when,detune=0){const ctx=getGameAudio();if(!ctx)return;const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type=type||"sine";osc.frequency.setValueAtTime(freq,when??ctx.currentTime);osc.detune.value=detune;gain.gain.setValueAtTime(.0001,when??ctx.currentTime);gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume||.04),(when??ctx.currentTime)+.018);gain.gain.exponentialRampToValueAtTime(.0001,(when??ctx.currentTime)+(duration||.16));osc.connect(gain);gain.connect(ctx.destination);osc.start(when??ctx.currentTime);osc.stop((when??ctx.currentTime)+(duration||.16)+.03)}
 function playAnswerTick(){const ctx=getGameAudio();if(!ctx)return;const t=ctx.currentTime;gameTone(880,.11,"sine",.11,t);gameTone(1320,.16,"sine",.075,t+.075)}
 function animateAnswerReveal(event){
  if(!isPublic||!event||event.round!==state.round)return;
+ playCustomSound("suspenso");
  const overlay=$("answerRevealOverlay");if(!overlay)return;
  $("answerRevealNumber").textContent=String(event.index+1).padStart(2,"0");
  $("answerRevealText").textContent=event.answer||"RESPUESTA";
