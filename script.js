@@ -121,7 +121,11 @@ function awardFinal(team){
 }
 function nextFinalQuestion(){
  const d=state.finalDuel;if(d.done)return;
- if(d.index>=4){d.done=true;d.deadline=null;clearInterval(finalTimer);save();return}
+ if(d.index===4&&!d.tieBreak){
+  if(d.scores[0]!==d.scores[1]){d.done=true;d.deadline=null;clearInterval(finalTimer);save();return}
+  d.tieBreak=true;d.index=5;d.remaining=20;d.deadline=Date.now()+20000;save();runFinalClock();return;
+ }
+ if(d.tieBreak&&d.index>=7){d.done=true;d.deadline=null;clearInterval(finalTimer);save();return}
  d.index++;d.remaining=20;d.deadline=Date.now()+20000;save();runFinalClock();
 }
 function finishFinal(){state.finalDuel.done=true;state.finalDuel.deadline=null;clearInterval(finalTimer);save()}
