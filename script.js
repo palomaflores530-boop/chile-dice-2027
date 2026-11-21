@@ -1,0 +1,52 @@
+/* CHILE DICE - Puedes editar las preguntas y respuestas en esta sección. */
+const ROUNDS = [
+ {question:"¿Qué es lo primero que haces al despertar?",answers:[["Mirar el celular",30],["Ir al baño",25],["Apagar la alarma",20],["Tomar desayuno",15],["Volver a dormir",10]]},
+ {question:"Nombra algo que nunca puede faltar en un asado.",answers:[["Carne",35],["Pan",25],["Ensaladas",18],["Bebidas",12],[" carbón / fuego",10]]},
+ {question:"¿Qué haces cuando se corta la luz?",answers:[["Buscar una linterna",30],["Revisar el automático",25],["Mirar el celular",20],["Salir a mirar",15],["Esperar",10]]},
+ {question:"Nombra algo típico que se come en Chile.",answers:[["Empanadas",30],["Completo",25],["Pastel de choclo",20],["Sopaipillas",15],["Cazuela",10]]},
+ {question:"¿Qué cosa suele perderse dentro de una casa?",answers:[["Las llaves",30],["El control remoto",25],["El celular",20],["Los calcetines",15],["La billetera",10]]},
+ {question:"¿Qué haces cuando llega visita inesperada?",answers:[["Ofrecer algo para comer",30],["Ordenar rápido",25],["Preparar té o café",20],["Saludar",15],["Disimular el desorden",10]]}
+];
+const KEY="chile-dice-state-v1";
+const freshState=()=>({round:0,teams:["Los Ganadores","Los Invencibles"],scores:[0,0],revealed:[],strikes:0,turn:null,phase:"duel",stealTeam:null,awardedTeam:null,awardedPoints:0,status:"Selecciona quién ganó el duelo inicial para comenzar.",finished:false});
+let state=loadState();
+function loadState(){try{return JSON.parse(localStorage.getItem(KEY))||freshState()}catch{return freshState()}}
+const $=id=>document.getElementById(id);
+const isPublic=new URLSearchParams(location.search).get("public")==="1";
+function save(){localStorage.setItem(KEY,JSON.stringify(state));render()}
+function toast(msg){const el=$("toast");if(!el)return;el.textContent=msg;el.classList.add("show");setTimeout(()=>el.classList.remove("show"),2200)}
+function totalRound(){return ROUNDS[state.round].answers.reduce((n,a)=>n+a[1],0)}
+function setStatus(s){state.status=s}
+function renderBoard(target,publicMode=false){target.innerHTML="";ROUNDS[state.round].answers.forEach((a,i)=>{const shown=state.revealed.includes(i);const card=document.createElement("div");card.className="answer-card "+(shown?"":"hidden-answer");card.innerHTML='<span class="answer-number">'+(shown?i+1:"?")+'</span><div class="answer-content"><div class="answer-text">'+(shown?escapeHtml(a[0]):"RESPUESTA OCULTA")+'</div></div><span class="answer-points">'+(shown?a[1]+" PTS":"—")+'</span>';target.appendChild(card)})}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function render(){if(isPublic){renderPublic();return}
+ $("teamALabel").textContent=state.teams[0];$("teamBLabel").textContent=state.teams[1];$("scoreA").textContent=state.scores[0];$("scoreB").textContent=state.scores[1];
+ $("roundNumber").textContent=(state.round+1)+" / 6";$("roundProgress").style.setProperty("--progress",((state.round+1)/6*100)+"%");
+ $("roundEyebrow").textContent="RONDA "+(state.round+1);$("roundTag").textContent=String(state.round+1).padStart(2,"0");$("questionText").textContent=ROUNDS[state.round].question;
+ renderBoard($("answerBoard"));$("strikes").innerHTML=[0,1,2].map(i=>'<span class="'+(i<state.strikes?"active":"")+'">X</span>').join("");
+ $("statusMessage").textContent=state.status;
+ $("turnA").textContent="Juega "+state.teams[0];$("turnB").textContent="Juega "+state.teams[1];
+ const opts='<option value="">Selecciona una respuesta</option>'+ROUNDS[state.round].answers.map((a,i)=>'<option value="'+i+'">'+(i+1)+'. '+escapeHtml(a[0])+' ('+a[1]+' pts)</option>').join("");
+ $("answerSelect").innerHTML=opts;$("stealSelect").innerHTML=opts;
+ $("correctBtn").disabled=state.phase!=="playing";$("wrongBtn").disabled=state.phase!=="playing";$("stealCorrect").disabled=state.phase!=="steal";$("stealWrong").disabled=state.phase!=="steal";
+ $("nextRound").disabled=state.round>=5||!["finished-round","playing","duel","steal"].includes(state.phase);
+ $("revealAll").disabled=state.phase==="finished-round";
+ if(state.finished)showWinner();
+}
+function renderPublic(){ $("publicTeamA").textContent=state.teams[0];$("publicTeamB").textContent=state.teams[1];$("publicScoreA").textContent=state.scores[0];$("publicScoreB").textContent=state.scores[1];$("publicRound").textContent=(state.round+1)+" / 6";$("publicProgress").style.setProperty("--progress",((state.round+1)/6*100)+"%");$("publicEyebrow").textContent="RONDA "+(state.round+1);$("publicQuestion").textContent=ROUNDS[state.round].question;renderBoard($("publicAnswerBoard"),true);$("publicStrikes").innerHTML=[0,1,2].map(i=>'<span class="'+(i<state.strikes?"active":"")+'">X</span>').join("");$("publicStatus").textContent=state.status;if(state.finished)showWinner()}
+function showWinner(){const el=$("winnerOverlay");if(!el)return;el.classList.remove("hidden");let title="¡EMPATE!";if(state.scores[0]>state.scores[1])title="¡GANÓ "+state.teams[0]+"!";if(state.scores[1]>state.scores[0])title="¡GANÓ "+state.teams[1]+"!";$("winnerTitle").textContent=title;$("winnerDescription").textContent=state.scores[0]+" puntos · "+state.scores[1]+" puntos"}
+function chooseTurn(team){if(state.phase==="finished-round"||state.phase==="steal"||state.finished)return;state.turn=team;state.phase="playing";setStatus("Está jugando "+state.teams[team]+". ¡Que comience la ronda!");save()}
+function selectIndex(id){const v=$(id).value;if(v===""){toast("Selecciona una respuesta primero.");return null}return Number(v)}
+function correct(){if(state.phase!=="playing")return;const i=selectIndex("answerSelect");if(i===null)return;if(state.revealed.includes(i)){toast("Esa respuesta ya fue revelada.");return}state.revealed.push(i);const pts=ROUNDS[state.round].answers[i][1];state.scores[state.turn]+=pts;setStatus("¡Correcto! "+state.teams[state.turn]+" suma "+pts+" puntos.");if(state.revealed.length===5)finishRound(state.turn,"¡Todas las respuestas encontradas!");else save()}
+function wrong(){if(state.phase!=="playing")return;state.strikes++;if(state.strikes>=3){state.phase="steal";state.stealTeam=1-state.turn;setStatus("¡TERCER ERROR! "+state.teams[state.stealTeam]+" tiene la oportunidad de robar todos los puntos.");}else setStatus("¡Respuesta incorrecta! Error "+state.strikes+" de 3.");save()}
+function finishRound(team,message){if(state.phase==="finished-round")return;state.awardedTeam=team;state.awardedPoints=totalRound();if(team!==null)state.scores[team]+=state.awardedPoints;state.phase="finished-round";setStatus(message+(team===null?"":" "+state.teams[team]+" gana "+state.awardedPoints+" puntos de la ronda."));save()}
+function steal(correctAnswer){if(state.phase!=="steal")return;if(correctAnswer){const i=selectIndex("stealSelect");if(i===null)return;if(state.revealed.includes(i)){toast("Esa respuesta ya está revelada.");return}state.revealed.push(i);finishRound(state.stealTeam,"¡ROBO CORRECTO! "+state.teams[state.stealTeam]+" se lleva los puntos.");}else finishRound(state.turn,"¡ROBO FALLIDO! "+state.teams[state.turn]+" conserva los puntos de la ronda.")}
+function resetRound(){if(state.awardedTeam!==null&&state.awardedTeam!==undefined)state.scores[state.awardedTeam]=Math.max(0,state.scores[state.awardedTeam]-state.awardedPoints);state.revealed=[];state.strikes=0;state.turn=null;state.phase="duel";state.stealTeam=null;state.awardedTeam=null;state.awardedPoints=0;state.status="Ronda reiniciada. Selecciona quién ganó el duelo inicial.";state.finished=false;save()}
+function nextRound(){if(state.round>=5){state.finished=true;state.status="¡Las seis rondas han terminado!";save();return}state.round++;state.revealed=[];state.strikes=0;state.turn=null;state.phase="duel";state.stealTeam=null;state.awardedTeam=null;state.awardedPoints=0;state.status="Nueva ronda. Selecciona quién ganó el duelo inicial.";save()}
+function resetGame(){if(!confirm("¿Reiniciar toda la partida y borrar los puntajes?"))return;state=freshState();save()}
+function openPublic(){const url=new URL(location.href);url.searchParams.set("public","1");window.open(url.toString(),"CHILE_DICE_PUBLICO","width=1200,height=850")}
+function init(){if(isPublic){$("hostApp").classList.add("hidden");$("publicApp").classList.remove("hidden");renderPublic();window.addEventListener("storage",e=>{if(e.key===KEY&&e.newValue){state=JSON.parse(e.newValue);renderPublic()}});window.addEventListener("focus",()=>{state=loadState();renderPublic()});return}
+ $("saveTeams").addEventListener("click",()=>{state.teams=[$("teamAInput").value.trim()||"Equipo 1",$("teamBInput").value.trim()||"Equipo 2"];save();toast("Nombres de equipos guardados.")});
+ $("turnA").addEventListener("click",()=>chooseTurn(0));$("turnB").addEventListener("click",()=>chooseTurn(1));$("correctBtn").addEventListener("click",correct);$("wrongBtn").addEventListener("click",wrong);$("stealCorrect").addEventListener("click",()=>steal(true));$("stealWrong").addEventListener("click",()=>steal(false));$("revealAll").addEventListener("click",()=>{state.revealed=[0,1,2,3,4];finishRound(null,"Respuestas restantes reveladas. No se suman puntos adicionales.")});$("resetRound").addEventListener("click",resetRound);$("nextRound").addEventListener("click",nextRound);$("resetGame").addEventListener("click",resetGame);$("openPublic").addEventListener("click",openPublic);
+ $("teamAInput").value=state.teams[0];$("teamBInput").value=state.teams[1];window.addEventListener("storage",e=>{if(e.key===KEY){toast("La partida se actualizó en otra ventana.")}});render()}
+document.addEventListener("DOMContentLoaded",init);
