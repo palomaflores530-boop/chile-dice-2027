@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071426">
+  <title>CHILE DICE | Juego familiar</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <main id="hostApp" class="app">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">CH</span><div><p class="eyebrow">EL GRAN JUEGO FAMILIAR</p><h1>CHILE <b>DICE</b></h1></div></div>
+      <div class="top-actions"><span class="live-dot">PARTIDA EN VIVO</span><button class="btn btn-outline" id="openPublic">Abrir pantalla TV ↗</button></div>
+    </header>
+
+    <section class="scoreboard">
+      <article class="team-score team-a"><label id="teamALabel">EQUIPO 1</label><strong id="scoreA">0</strong><small>PUNTOS</small></article>
+      <div class="score-center"><span>RONDA</span><strong id="roundNumber">1 / 6</strong><div class="round-progress" id="roundProgress"></div></div>
+      <article class="team-score team-b"><label id="teamBLabel">EQUIPO 2</label><strong id="scoreB">0</strong><small>PUNTOS</small></article>
+    </section>
+
+    <section class="setup-panel panel" id="setupPanel">
+      <div><p class="eyebrow gold">ANTES DE COMENZAR</p><h2>Configuren sus equipos</h2><p class="muted">Escriban los nombres y comiencen la partida.</p></div>
+      <div class="team-setup"><label>Nombre equipo 1<input id="teamAInput" value="Los Ganadores" maxlength="22"></label><label>Nombre equipo 2<input id="teamBInput" value="Los Invencibles" maxlength="22"></label></div>
+      <button class="btn btn-gold" id="saveTeams">Guardar equipos</button>
+    </section>
+
+    <section class="game-layout">
+      <section class="main-panel panel">
+        <div class="round-heading"><div><p class="eyebrow gold" id="roundEyebrow">RONDA 1</p><h2 id="questionText">¿Qué es lo primero que haces al despertar?</h2></div><span class="round-tag" id="roundTag">01</span></div>
+        <div class="answer-board" id="answerBoard"></div>
+        <div class="strikes-area"><span class="eyebrow">ERRORES DEL EQUIPO</span><div class="strikes" id="strikes"><span> X </span><span> X </span><span> X </span></div></div>
+        <div class="status-message" id="statusMessage" aria-live="polite">Selecciona quién ganó el duelo inicial para comenzar.</div>
+      </section>
+      <aside class="side-panel">
+        <section class="panel controls">
+          <p class="eyebrow gold">CONTROL DEL ANFITRIÓN</p>
+          <h3>Turno de juego</h3>
+          <div class="turn-buttons"><button class="btn btn-team-a" id="turnA">Juega equipo 1</button><button class="btn btn-team-b" id="turnB">Juega equipo 2</button></div>
+          <div class="divider"></div>
+          <h3>Revelar respuesta</h3>
+          <label class="field-label" for="answerSelect">Respuesta entregada</label>
+          <select id="answerSelect"><option value="">Selecciona una respuesta</option></select>
+          <button class="btn btn-success full" id="correctBtn">✓ Respuesta correcta</button>
+          <button class="btn btn-danger full" id="wrongBtn">✕ Respuesta incorrecta</button>
+          <div class="divider"></div>
+          <h3>Robo de puntos</h3>
+          <p class="muted small">Después de tres errores, el otro equipo tiene una oportunidad.</p>
+          <select id="stealSelect"><option value="">Respuesta para el robo</option></select>
+          <button class="btn btn-gold full" id="stealCorrect">Robo correcto</button>
+          <button class="btn btn-outline full" id="stealWrong">Robo fallido</button>
+        </section>
+        <section class="panel round-tools">
+          <p class="eyebrow gold">HERRAMIENTAS</p>
+          <button class="btn btn-outline full" id="revealAll">Revelar respuestas restantes</button>
+          <button class="btn btn-outline full" id="resetRound">Reiniciar ronda</button>
+          <button class="btn btn-outline full" id="nextRound">Siguiente ronda →</button>
+          <button class="btn btn-danger full" id="resetGame">Reiniciar partida completa</button>
+        </section>
+      </aside>
+    </section>
+    <footer>CHILE DICE · JUEGO FAMILIAR · PANTALLA DE ANFITRIÓN</footer>
+  </main>
+
+  <main id="publicApp" class="public-app hidden">
+    <header class="public-header"><div class="brand"><span class="brand-mark">CH</span><div><p class="eyebrow">EL GRAN JUEGO FAMILIAR</p><h1>CHILE <b>DICE</b></h1></div></div><span class="live-dot">EN VIVO</span></header>
+    <section class="scoreboard public-scores">
+      <article class="team-score team-a"><label id="publicTeamA">EQUIPO 1</label><strong id="publicScoreA">0</strong><small>PUNTOS</small></article>
+      <div class="score-center"><span id="publicRoundLabel">RONDA</span><strong id="publicRound">1 / 6</strong><div class="round-progress" id="publicProgress"></div></div>
+      <article class="team-score team-b"><label id="publicTeamB">EQUIPO 2</label><strong id="publicScoreB">0</strong><small>PUNTOS</small></article>
+    </section>
+    <section class="public-board panel"><p class="eyebrow gold" id="publicEyebrow">RONDA 1</p><h2 id="publicQuestion">Pregunta del juego</h2><div class="answer-board public-answers" id="publicAnswerBoard"></div><div class="strikes-area"><span class="eyebrow">ERRORES</span><div class="strikes" id="publicStrikes"><span> X </span><span> X </span><span> X </span></div></div><div class="status-message" id="publicStatus">¡A jugar!</div></section>
+    <div class="winner-overlay hidden" id="winnerOverlay"><div class="winner-card"><p class="eyebrow gold">FIN DEL JUEGO</p><h2 id="winnerTitle">¡TENEMOS GANADOR!</h2><p id="winnerDescription"></p></div></div>
+  </main>
+  <div class="toast" id="toast" role="status"></div>
+</body>
+</html>
