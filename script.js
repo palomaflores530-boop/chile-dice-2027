@@ -14,7 +14,7 @@ let lastPublicStrikes=0;
 let lastPublicResultStamp=0;
 let publicChannel=null;
 function animateErrorFlash(){const el=$("errorFlash");if(!el)return;el.classList.remove("play");void el.offsetWidth;el.classList.add("play");}
-function animateStealResult(success){const el=$("resultFlash");if(!el)return;el.textContent=success?"✓":"✕";el.className="result-flash "+(success?"success":"failure");void el.offsetWidth;el.classList.add("play");}
+function animateStealResult(success){const el=$("resultFlash");if(!el)return;el.innerHTML=success?'<div class="steal-result-card success"><span class="steal-symbol">✓</span><strong>¡ROBO CORRECTO!</strong></div>':'<div class="steal-result-card failure"><span class="steal-symbol">✕</span><strong>¡ROBO FALLIDO!</strong></div>';el.className="result-flash";void el.offsetWidth;el.classList.add("play");setTimeout(()=>el.classList.remove("play"),2700);}
 function sendStealResult(success){const event={type:"steal-result",round:state.round,success:!!success,stamp:Date.now()};try{if(publicChannel)publicChannel.postMessage(event);}catch(e){}try{localStorage.setItem("chile-dice-result-event",JSON.stringify(event));}catch(e){}}
 function loadState(){try{return JSON.parse(localStorage.getItem(KEY))||freshState()}catch{return freshState()}}
 const $=id=>document.getElementById(id);
