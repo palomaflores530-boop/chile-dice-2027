@@ -94,7 +94,7 @@ function renderFinalAdmin(){
  $("repA").value=d.names[0]||"";$("repB").value=d.names[1]||"";
  $("finalAdminPlay").classList.toggle("hidden",!d.started);
  $("finalNameA").textContent=d.names[0];$("finalNameB").textContent=d.names[1];$("finalScoreA").textContent=d.scores[0];$("finalScoreB").textContent=d.scores[1];
- $("finalClock").textContent=d.remaining;$("finalQuestionCount").textContent="PREGUNTA "+Math.min(d.index+1,5)+" DE 5";$("finalQuestion").textContent=FINAL_QUESTIONS[Math.min(d.index,4)].question;
+ $("finalClock").textContent=d.remaining;$("finalQuestionCount").textContent=d.tieBreak?"MUERTE SÚBITA":"PREGUNTA "+Math.min(d.index+1,5)+" DE 5";$("finalQuestion").textContent=FINAL_QUESTIONS[Math.min(d.index,7)].question;
  $("finalAdminStatus").textContent=d.done?finalWinnerText():"Cada representante tiene 20 segundos para responder. El anfitrión asigna el punto al equipo que acierta.";
  $("startFinal").disabled=d.started;
 }
@@ -117,7 +117,7 @@ function runFinalClock(){
 }
 function awardFinal(team){
  const d=state.finalDuel;if(!d.started||d.done||d.remaining<=0)return;
- d.scores[team]++;d.deadline=null;d.remaining=0;clearInterval(finalTimer);save();
+ d.scores[team]++;d.deadline=null;d.remaining=0;clearInterval(finalTimer);if(d.tieBreak&&d.scores[0]!==d.scores[1])d.done=true;save();
 }
 function nextFinalQuestion(){
  const d=state.finalDuel;if(d.done)return;
