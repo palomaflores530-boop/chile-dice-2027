@@ -53,7 +53,7 @@ function render(){if(isPublic){renderPublic();return} if(state.finalDuel?.active
  $("correctBtn").disabled=state.phase!=="playing";$("wrongBtn").disabled=state.phase!=="playing";$("stealCorrect").disabled=state.phase!=="steal";$("stealWrong").disabled=state.phase!=="steal";
  $("nextRound").disabled=state.finished;$("nextRound").textContent=state.phase==="finished-round"?(state.round>=ROUNDS.length-1?"Continuar al duelo final →":"Continuar a la siguiente ronda →"):"Siguiente ronda →";
  $("revealAll").disabled=state.phase==="finished-round";
- if(state.finished)showWinner();
+ renderRoundResult(false);if(state.finished)showWinner();
 }
 function renderPublic(){ if(state.finalDuel?.active){renderFinalPublic();return} $("publicTeamA").textContent=state.teams[0];$("publicTeamB").textContent=state.teams[1];$("publicScoreA").textContent=state.scores[0];$("publicScoreB").textContent=state.scores[1];$("publicRound").textContent=(state.round+1)+" / "+ROUNDS.length;$("publicProgress").style.setProperty("--progress",((state.round+1)/ROUNDS.length*100)+"%");$("publicEyebrow").textContent="RONDA "+(state.round+1);$("publicQuestion").textContent=ROUNDS[state.round].question;renderBoard($("publicAnswerBoard"),true);$("publicStrikes").innerHTML=[0,1,2].map(i=>'<span class="'+(i<state.strikes?"active":"")+'">X</span>').join("");$("publicStatus").textContent=state.status;renderRoundResult(true);if(state.finished)showWinner()}
 
