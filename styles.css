@@ -69,3 +69,10 @@
  78%{opacity:1}
  100%{opacity:0}
 }
+
+/* Resultado del robo: check verde o X roja a pantalla completa */
+.result-flash{position:fixed!important;inset:0!important;z-index:2147483646!important;display:flex!important;align-items:center!important;justify-content:center!important;width:100vw!important;height:100vh!important;opacity:0;visibility:hidden;pointer-events:none!important;background:transparent!important;font-family:Arial,sans-serif;font-size:min(78vmin,900px)!important;font-weight:900!important;line-height:1!important;text-shadow:0 0 12px currentColor,0 0 35px currentColor,0 0 75px currentColor;transform:scale(.35)}
+.result-flash.success{color:#24ff91!important;-webkit-text-stroke:8px #baffd9}
+.result-flash.failure{color:#ff1835!important;-webkit-text-stroke:8px #ffc0c7}
+.result-flash.play{visibility:visible!important;animation:resultFlashShow 1.6s cubic-bezier(.16,.8,.25,1) both!important}
+@keyframes resultFlashShow{0%{opacity:0;transform:scale(.2)}15%{opacity:1;transform:scale(1.08)}30%,78%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.96)}}
