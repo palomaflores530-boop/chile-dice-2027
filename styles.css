@@ -8,3 +8,29 @@
 .error-flash{position:absolute;z-index:4;left:50%;top:43%;transform:translate(-50%,-50%) scale(.25) rotate(-12deg);font-family:Arial,sans-serif;font-size:clamp(220px,35vw,460px);font-weight:900;line-height:.8;color:#ff263b;-webkit-text-stroke:7px #ffb1b8;text-shadow:0 0 8px #ff001e,0 0 22px #ff001e,0 0 48px #ff001e,0 0 85px #ff001e;opacity:0;pointer-events:none}
 .error-flash.play{animation:errorStrike .95s cubic-bezier(.16,.8,.25,1) both}
 @keyframes errorStrike{0%{opacity:0;transform:translate(-50%,-50%) scale(.18) rotate(-18deg)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.08) rotate(0)}38%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0)}72%{opacity:.95;transform:translate(-50%,-50%) scale(1) rotate(0)}100%{opacity:0;transform:translate(-50%,-50%) scale(.92) rotate(0)}}
+
+/* X de error estilo programa de concursos: superpuesta al centro de toda la pantalla pública */
+.error-flash{
+ position:fixed!important; z-index:99999!important; left:50vw!important; top:50vh!important;
+ width:min(58vw,720px)!important; height:min(58vw,720px)!important;
+ max-height:78vh!important; max-width:78vh!important;
+ font-size:0!important; color:transparent!important; border:0!important;
+ background:transparent!important; opacity:0; pointer-events:none;
+ transform:translate(-50%,-50%) scale(.2) rotate(-12deg)!important;
+}
+.error-flash::before,.error-flash::after{
+ content:""; position:absolute; left:50%; top:50%; width:17%; height:100%;
+ border-radius:999px; transform-origin:center;
+ background:linear-gradient(90deg,#7d0011 0%,#ff1835 22%,#ff5264 48%,#ff102e 75%,#850013 100%);
+ border:5px solid #ff9aa5; box-shadow:0 0 10px #ff001e,0 0 28px #ff001e,0 0 65px #ff001e, inset 0 0 12px #fff;
+}
+.error-flash::before{transform:translate(-50%,-50%) rotate(45deg)}
+.error-flash::after{transform:translate(-50%,-50%) rotate(-45deg)}
+.error-flash.play{animation:errorStrikeCenter 1.25s cubic-bezier(.16,.8,.25,1) both}
+@keyframes errorStrikeCenter{
+ 0%{opacity:0;transform:translate(-50%,-50%) scale(.15) rotate(-18deg)}
+ 18%{opacity:1;transform:translate(-50%,-50%) scale(1.05) rotate(0)}
+ 35%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0)}
+ 78%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0)}
+ 100%{opacity:0;transform:translate(-50%,-50%) scale(.94) rotate(0)}
+}
