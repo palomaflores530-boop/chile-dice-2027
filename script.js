@@ -57,7 +57,7 @@ function render(){if(isPublic){renderPublic();return} if(state.finalDuel?.active
 }
 function renderPublic(){ if(state.finalDuel?.active){renderFinalPublic();return} $("publicTeamA").textContent=state.teams[0];$("publicTeamB").textContent=state.teams[1];$("publicScoreA").textContent=state.scores[0];$("publicScoreB").textContent=state.scores[1];$("publicRound").textContent=(state.round+1)+" / "+ROUNDS.length;$("publicProgress").style.setProperty("--progress",((state.round+1)/ROUNDS.length*100)+"%");$("publicEyebrow").textContent="RONDA "+(state.round+1);$("publicQuestion").textContent=ROUNDS[state.round].question;renderBoard($("publicAnswerBoard"),true);$("publicStrikes").innerHTML=[0,1,2].map(i=>'<span class="'+(i<state.strikes?"active":"")+'">X</span>').join("");$("publicStatus").textContent=state.status;renderRoundResult(true);if(state.finished)showWinner()}
 
-let lastRoundResultStamp="";
+let lastRoundResultStamp="";try{lastRoundResultStamp=localStorage.getItem(isPublic?"chile-dice-result-seen-public":"chile-dice-result-seen-host")||""}catch(e){}
 let resultSoundContext=null;
 function animateResultCount(id,target){
  const el=$(id);if(!el)return;const end=Math.max(0,Number(target)||0),start=performance.now(),duration=1350;
@@ -89,7 +89,7 @@ function paintResult(prefix,isPublicMode){
  el("winner").textContent=r.winner===null?"No se asignaron puntos":("GANADOR DE LA RONDA: "+r.teams[r.winner]);
  buildResultParticles(ids.particles);
  if(lastRoundResultStamp!==r.stamp){
-  lastRoundResultStamp=r.stamp;
+  lastRoundResultStamp=r.stamp;try{localStorage.setItem(isPublicMode?"chile-dice-result-seen-public":"chile-dice-result-seen-host",r.stamp)}catch(e){}
   animateResultCount(ids.ptsA,r.points[0]);animateResultCount(ids.ptsB,r.points[1]);animateResultCount(ids.totalA,r.totals[0]);animateResultCount(ids.totalB,r.totals[1]);
   if(isPublicMode)playRoundCelebration();
  }
