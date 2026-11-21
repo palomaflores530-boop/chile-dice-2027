@@ -28,7 +28,8 @@ function render(){if(isPublic){renderPublic();return}
  $("turnA").textContent="Juega "+state.teams[0];$("turnB").textContent="Juega "+state.teams[1];
  const opts='<option value="">Selecciona una respuesta</option>'+ROUNDS[state.round].answers.map((a,i)=>'<option value="'+i+'">'+(i+1)+'. '+escapeHtml(a[0])+' ('+a[1]+' pts)</option>').join("");
  const stealOpts='<option value="">Selecciona una respuesta oculta</option>'+ROUNDS[state.round].answers.map((a,i)=>({a,i})).filter(x=>!state.revealed.includes(x.i)).map(({a,i})=>'<option value="'+i+'">'+(i+1)+'. '+escapeHtml(a[0])+' ('+a[1]+' pts)</option>').join("");
- $("answerSelect").innerHTML=opts;$("stealSelect").innerHTML=stealOpts;
+ const availableOpts='<option value="">Selecciona una respuesta disponible</option>'+ROUNDS[state.round].answers.map((a,i)=>({a,i})).filter(x=>!state.revealed.includes(x.i)).map(({a,i})=>'<option value="'+i+'">'+(i+1)+'. '+escapeHtml(a[0])+' ('+a[1]+' pts)</option>').join("");
+ $("answerSelect").innerHTML=availableOpts;$("stealSelect").innerHTML=stealOpts;
  $("correctBtn").disabled=state.phase!=="playing";$("wrongBtn").disabled=state.phase!=="playing";$("stealCorrect").disabled=state.phase!=="steal";$("stealWrong").disabled=state.phase!=="steal";
  $("nextRound").disabled=state.finished;$("nextRound").textContent=state.round>=5?"Finalizar partida →":"Siguiente ronda →";
  $("revealAll").disabled=state.phase==="finished-round";
