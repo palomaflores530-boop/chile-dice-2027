@@ -40,3 +40,9 @@
 .error-flash svg{display:block;width:100%;height:100%;overflow:visible}
 .error-flash.play{animation:tvXAppear 1.45s cubic-bezier(.15,.8,.2,1) both!important}
 @keyframes tvXAppear{0%{opacity:0;transform:translate(-50%,-50%) scale(.12) rotate(-8deg)!important}15%{opacity:1;transform:translate(-50%,-50%) scale(1.08) rotate(0)!important}30%,78%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0)!important}100%{opacity:0;transform:translate(-50%,-50%) scale(.98) rotate(0)!important}}
+
+/* Reglas finales: la X ocupa el centro del viewport público */
+.error-flash{position:fixed!important;inset:0!important;z-index:2147483000!important;width:100vw!important;height:100vh!important;max-width:none!important;max-height:none!important;display:grid!important;place-items:center!important;opacity:0;transform:none!important;filter:none!important;pointer-events:none!important}
+.error-flash svg{width:min(68vmin,760px)!important;height:min(68vmin,760px)!important;overflow:visible;filter:drop-shadow(0 0 12px #ff001e) drop-shadow(0 0 35px #ff001e)}
+.error-flash.play{animation:tvXFull 1.55s ease-out both!important}
+@keyframes tvXFull{0%{opacity:0}12%{opacity:1}78%{opacity:1}100%{opacity:0}}
