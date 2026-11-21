@@ -34,3 +34,9 @@
  78%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0)}
  100%{opacity:0;transform:translate(-50%,-50%) scale(.94) rotate(0)}
 }
+
+/* X gráfica SVG, igual al efecto luminoso del tablero de TV */
+.error-flash{position:fixed!important;z-index:999999!important;left:50vw!important;top:50vh!important;width:min(58vw,650px)!important;height:min(58vw,650px)!important;max-width:78vh!important;max-height:78vh!important;opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.18) rotate(-8deg)!important;background:none!important;border:0!important;filter:drop-shadow(0 0 15px #ff001e) drop-shadow(0 0 38px #ff001e)}
+.error-flash svg{display:block;width:100%;height:100%;overflow:visible}
+.error-flash.play{animation:tvXAppear 1.45s cubic-bezier(.15,.8,.2,1) both!important}
+@keyframes tvXAppear{0%{opacity:0;transform:translate(-50%,-50%) scale(.12) rotate(-8deg)!important}15%{opacity:1;transform:translate(-50%,-50%) scale(1.08) rotate(0)!important}30%,78%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0)!important}100%{opacity:0;transform:translate(-50%,-50%) scale(.98) rotate(0)!important}}
