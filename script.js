@@ -54,11 +54,13 @@ function steal(correctAnswer){
   const i=selectIndex("stealSelect");if(i===null)return;
   if(state.revealed.includes(i)){toast("Esa respuesta ya está revelada.");return}
   state.revealed.push(i);
+ }
+ state.lastResultEvent={type:"steal-result",round:state.round,success:!!correctAnswer,stamp:Date.now()+"-"+Math.random().toString(36).slice(2)};
+ if(correctAnswer){
   finishRound(state.stealTeam,"¡ROBO CORRECTO! "+state.teams[state.stealTeam]+" se lleva los puntos.");
  }else{
   finishRound(state.turn,"¡ROBO FALLIDO! "+state.teams[state.turn]+" conserva los puntos de la ronda.");
  }
- sendStealResult(correctAnswer);
 }
 function resetRound(){if(state.awardedTeam!==null&&state.awardedTeam!==undefined)state.scores[state.awardedTeam]=Math.max(0,state.scores[state.awardedTeam]-state.awardedPoints);state.revealed=[];state.strikes=0;state.turn=null;state.phase="duel";state.stealTeam=null;state.awardedTeam=null;state.awardedPoints=0;state.status="Ronda reiniciada. Selecciona quién ganó el duelo inicial.";state.finished=false;save()}
 function nextRound(){if(state.round>=5){state.finished=true;state.status="¡Las seis rondas han terminado!";save();return}state.round++;state.revealed=[];state.strikes=0;state.turn=null;state.phase="duel";state.stealTeam=null;state.awardedTeam=null;state.awardedPoints=0;state.status="Nueva ronda. Selecciona quién ganó el duelo inicial.";save()}
