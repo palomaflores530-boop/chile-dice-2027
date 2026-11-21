@@ -174,3 +174,60 @@ body>#resultFlash.result-flash{z-index:2147483647!important;display:flex!importa
 @keyframes answerRevealCurtain{0%{opacity:0}100%{opacity:1}}
 @keyframes answerRevealPop{0%{opacity:0;transform:translateY(45px) scale(.68)}12%{opacity:1;transform:translateY(-5px) scale(1.04)}22%,88%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-12px) scale(.96)}}
 @media(prefers-reduced-motion:reduce){.answer-reveal-overlay.play,.answer-reveal-overlay.play .answer-reveal-card{animation:none!important}.answer-reveal-overlay.play{opacity:1}.answer-reveal-overlay.play .answer-reveal-card{opacity:1;transform:none}}
+
+
+/* Ajuste de la pantalla pública para televisores: tablero compacto y sin scroll */
+body:has(#publicApp:not(.hidden)){overflow:hidden}
+.public-app{
+  width:100%;max-width:1600px;height:100vh;height:100dvh;min-height:0;
+  padding:clamp(10px,1.25vw,20px) clamp(16px,2vw,30px);
+  display:flex;flex-direction:column;overflow:hidden!important;
+}
+.public-header{flex:0 0 auto;margin-bottom:clamp(8px,1vh,14px)}
+.public-header .brand-mark{width:44px;height:44px}
+.public-scores{flex:0 0 auto;grid-template-columns:1fr 190px 1fr;gap:10px;margin-bottom:clamp(10px,1.2vh,16px)}
+.public-scores .team-score{min-height:clamp(76px,10vh,108px);padding:8px 16px}
+.public-scores .team-score strong{font-size:clamp(34px,3.2vw,48px)}
+.public-scores .score-center{min-height:clamp(76px,10vh,108px);padding:8px 14px}
+.public-board{
+  flex:1 1 auto;width:min(100%,1280px);min-height:0;
+  padding:clamp(14px,1.6vw,22px);
+  display:flex;flex-direction:column;justify-content:center;
+}
+.public-board h2{font-size:clamp(23px,2.65vw,38px);line-height:1.12;margin:6px auto clamp(12px,1.6vh,20px)}
+.public-answers{width:min(100%,1050px);gap:clamp(8px,1vh,12px)}
+.public-answers .answer-card{min-height:clamp(58px,7.2vh,76px);padding:8px 12px;gap:10px}
+.public-answers .answer-number{width:34px;height:34px}
+.public-answers .answer-text{font-size:clamp(13px,1.35vw,18px)}
+.public-answers .answer-points{font-size:clamp(14px,1.35vw,18px)}
+.public-board .strikes-area{margin-top:clamp(12px,1.6vh,20px)}
+.public-board .strikes span{width:38px;height:38px;font-size:16px}
+.public-board .status-message{margin-top:12px;padding:10px 12px;min-height:36px;font-size:clamp(11px,1.1vw,14px)}
+#publicMusicToggle{right:18px!important;bottom:16px!important;min-height:42px!important;padding:10px 16px!important}
+@media(max-height:850px){
+  .public-app{padding-top:8px;padding-bottom:8px}
+  .public-header{margin-bottom:6px}
+  .public-header .brand-mark{width:38px;height:38px}
+  .public-scores{margin-bottom:8px}
+  .public-scores .team-score,.public-scores .score-center{min-height:68px}
+  .public-scores .team-score strong{font-size:32px}
+  .public-board{padding:12px}
+  .public-board h2{font-size:clamp(20px,2.3vw,30px);margin:4px auto 10px}
+  .public-answers .answer-card{min-height:54px}
+  .public-board .strikes-area{margin-top:8px}
+  .public-board .status-message{margin-top:8px;padding:7px 10px}
+}
+@media(max-width:850px){
+  body:has(#publicApp:not(.hidden)){overflow:auto}
+  .public-app{height:auto;min-height:100vh;overflow:visible!important}
+  .public-scores{grid-template-columns:1fr 100px 1fr}
+  .public-board{flex:none}
+}
+@media(max-width:560px){
+  .public-app{padding:10px}
+  .public-header{align-items:center}
+  .public-header h1{font-size:19px}
+  .public-scores .team-score strong{font-size:28px}
+  .public-answers .answer-card{min-height:58px}
+  .public-board h2{font-size:22px}
+}
