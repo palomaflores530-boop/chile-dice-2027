@@ -22,7 +22,7 @@ const ROUNDS = [
  {question:"¿Qué dice un chileno cuando se queda sin plata?",answers:[["Ando pato",30],["Estoy más pelado que rodilla de cabro chico",25],["No tengo ni uno",20],["Estoy cortísimo de lucas",15],["Estoy esperando que me paguen",10]]}
 ];
 const KEY="chile-dice-state-v1";
-const freshState=()=>({round:0,teams:["Los Ganadores","Los Invencibles"],scores:[0,0],revealed:[],strikes:0,turn:null,phase:"duel",stealTeam:null,awardedTeam:null,awardedPoints:0,status:"Selecciona quién ganó el duelo inicial para comenzar.",finished:false});
+const freshState=()=>({round:0,teams:["Los Ganadores","Los Invencibles"],scores:[0,0],revealed:[],strikes:0,turn:null,phase:"duel",stealTeam:null,awardedTeam:null,awardedPoints:0,status:"Selecciona quién ganó el duelo inicial para comenzar.",finished:false,finalDuel:{active:false,started:false,names:["",""],scores:[0,0],index:0,remaining:20,deadline:null,done:false,tieBreak:false}});
 let state=loadState();
 let lastPublicStrikes=0;
 let lastPublicResultStamp=0;
@@ -39,7 +39,7 @@ function totalRound(){return ROUNDS[state.round].answers.reduce((n,a)=>n+a[1],0)
 function setStatus(s){state.status=s}
 function renderBoard(target,publicMode=false){target.innerHTML="";ROUNDS[state.round].answers.forEach((a,i)=>{const shown=state.revealed.includes(i);const card=document.createElement("div");card.className="answer-card "+(shown?"":"hidden-answer");card.innerHTML='<span class="answer-number">'+(shown?i+1:"?")+'</span><div class="answer-content"><div class="answer-text">'+(shown?escapeHtml(a[0]):"RESPUESTA OCULTA")+'</div></div><span class="answer-points">'+(shown?a[1]+" PTS":"—")+'</span>';target.appendChild(card)})}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function render(){if(isPublic){renderPublic();return}
+function render(){if(isPublic){renderPublic();return} if(state.finalDuel?.active){renderFinalAdmin();return}
  $("teamALabel").textContent=state.teams[0];$("teamBLabel").textContent=state.teams[1];$("scoreA").textContent=state.scores[0];$("scoreB").textContent=state.scores[1];
  $("roundNumber").textContent=(state.round+1)+" / "+ROUNDS.length;$("roundProgress").style.setProperty("--progress",((state.round+1)/ROUNDS.length*100)+"%");
  $("roundEyebrow").textContent="RONDA "+(state.round+1);$("roundTag").textContent=String(state.round+1).padStart(2,"0");$("questionText").textContent=ROUNDS[state.round].question;
@@ -55,7 +55,7 @@ function render(){if(isPublic){renderPublic();return}
  $("revealAll").disabled=state.phase==="finished-round";
  if(state.finished)showWinner();
 }
-function renderPublic(){ $("publicTeamA").textContent=state.teams[0];$("publicTeamB").textContent=state.teams[1];$("publicScoreA").textContent=state.scores[0];$("publicScoreB").textContent=state.scores[1];$("publicRound").textContent=(state.round+1)+" / 6";$("publicProgress").style.setProperty("--progress",((state.round+1)/6*100)+"%");$("publicEyebrow").textContent="RONDA "+(state.round+1);$("publicQuestion").textContent=ROUNDS[state.round].question;renderBoard($("publicAnswerBoard"),true);$("publicStrikes").innerHTML=[0,1,2].map(i=>'<span class="'+(i<state.strikes?"active":"")+'">X</span>').join("");$("publicStatus").textContent=state.status;if(state.finished)showWinner()}
+function renderPublic(){ if(state.finalDuel?.active){renderFinalPublic();return} $("publicTeamA").textContent=state.teams[0];$("publicTeamB").textContent=state.teams[1];$("publicScoreA").textContent=state.scores[0];$("publicScoreB").textContent=state.scores[1];$("publicRound").textContent=(state.round+1)+" / 6";$("publicProgress").style.setProperty("--progress",((state.round+1)/6*100)+"%");$("publicEyebrow").textContent="RONDA "+(state.round+1);$("publicQuestion").textContent=ROUNDS[state.round].question;renderBoard($("publicAnswerBoard"),true);$("publicStrikes").innerHTML=[0,1,2].map(i=>'<span class="'+(i<state.strikes?"active":"")+'">X</span>').join("");$("publicStatus").textContent=state.status;if(state.finished)showWinner()}
 function showWinner(){const el=$("winnerOverlay");if(!el)return;el.classList.remove("hidden");let title="¡EMPATE!";if(state.scores[0]>state.scores[1])title="¡GANÓ "+state.teams[0]+"!";if(state.scores[1]>state.scores[0])title="¡GANÓ "+state.teams[1]+"!";$("winnerTitle").textContent=title;$("winnerDescription").textContent=state.scores[0]+" puntos · "+state.scores[1]+" puntos"}
 function chooseTurn(team){if(state.phase==="finished-round"||state.phase==="steal"||state.finished)return;state.turn=team;state.phase="playing";setStatus("Está jugando "+state.teams[team]+". ¡Que comience la ronda!");save()}
 function selectIndex(id){const v=$(id).value;if(v===""){toast("Selecciona una respuesta primero.");return null}return Number(v)}
@@ -77,7 +77,7 @@ function steal(correctAnswer){
  }
 }
 function resetRound(){if(state.awardedTeam!==null&&state.awardedTeam!==undefined)state.scores[state.awardedTeam]=Math.max(0,state.scores[state.awardedTeam]-state.awardedPoints);state.revealed=[];state.strikes=0;state.turn=null;state.phase="duel";state.stealTeam=null;state.awardedTeam=null;state.awardedPoints=0;state.status="Ronda reiniciada. Selecciona quién ganó el duelo inicial.";state.finished=false;save()}
-function nextRound(){if(state.round>=ROUNDS.length-1){state.finished=true;state.status="¡Las 20 rondas han terminado!";save();return}state.round++;state.revealed=[];state.strikes=0;state.turn=null;state.phase="duel";state.stealTeam=null;state.awardedTeam=null;state.awardedPoints=0;state.status="Nueva ronda. Selecciona quién ganó el duelo inicial.";save()}
+function nextRound(){if(state.round>=ROUNDS.length-1){state.finished=true;state.finalDuel=state.finalDuel||{active:false,started:false,names:["",""],scores:[0,0],index:0,remaining:20,deadline:null,done:false,tieBreak:false};state.finalDuel.active=true;state.status="¡Comienza el duelo final!";save();return}state.round++;state.revealed=[];state.strikes=0;state.turn=null;state.phase="duel";state.stealTeam=null;state.awardedTeam=null;state.awardedPoints=0;state.status="Nueva ronda. Selecciona quién ganó el duelo inicial.";save()}
 function resetGame(){if(!confirm("¿Reiniciar toda la partida y borrar los puntajes?"))return;state=freshState();save()}
 function openPublic(){const url=new URL(location.href);url.searchParams.set("public","1");window.open(url.toString(),"CHILE_DICE_PUBLICO","width=1200,height=850")}
 function init(){try{if("BroadcastChannel" in window){publicChannel=new BroadcastChannel("chile-dice-live");}}catch(e){}if(isPublic){$("hostApp").classList.add("hidden");$("publicApp").classList.remove("hidden");lastPublicStrikes=state.strikes;lastPublicResultStamp=state.lastResultEvent?.stamp||0;renderPublic();if(publicChannel)publicChannel.onmessage=e=>{const m=e.data||{};if(m.type==="strike"&&m.round===state.round){animateErrorFlash();}if(m.type==="steal-result"&&m.round===state.round){animateStealResult(!!m.success);}};window.addEventListener("storage",e=>{if(e.key==="chile-dice-result-event"&&e.newValue){try{const event=JSON.parse(e.newValue);if(event.type==="steal-result"&&event.round===state.round)animateStealResult(!!event.success);}catch(err){}}if(e.key===KEY&&e.newValue){const incoming=JSON.parse(e.newValue);if(incoming.round!==state.round)lastPublicStrikes=0;const newStrike=incoming.strikes>lastPublicStrikes;const resultEvent=incoming.lastResultEvent;const newResult=!!(resultEvent&&resultEvent.stamp&&resultEvent.stamp!==lastPublicResultStamp);state=incoming;renderPublic();if(newStrike)animateErrorFlash();if(newResult){animateStealResult(!!resultEvent.success);lastPublicResultStamp=resultEvent.stamp;}lastPublicStrikes=state.strikes}});window.addEventListener("focus",()=>{const incoming=loadState();if(incoming.round!==state.round)lastPublicStrikes=0;const newStrike=incoming.strikes>lastPublicStrikes;const resultEvent=incoming.lastResultEvent;const newResult=!!(resultEvent&&resultEvent.stamp&&resultEvent.stamp!==lastPublicResultStamp);state=incoming;renderPublic();if(newStrike)animateErrorFlash();if(newResult){animateStealResult(!!resultEvent.success);lastPublicResultStamp=resultEvent.stamp;}lastPublicStrikes=state.strikes});return}
@@ -85,3 +85,48 @@ function init(){try{if("BroadcastChannel" in window){publicChannel=new Broadcast
  $("turnA").addEventListener("click",()=>chooseTurn(0));$("turnB").addEventListener("click",()=>chooseTurn(1));$("correctBtn").addEventListener("click",correct);$("wrongBtn").addEventListener("click",wrong);$("stealCorrect").addEventListener("click",()=>steal(true));$("stealWrong").addEventListener("click",()=>steal(false));$("revealAll").addEventListener("click",()=>{state.revealed=[0,1,2,3,4];finishRound(null,"Respuestas restantes reveladas. No se suman puntos adicionales.")});$("resetRound").addEventListener("click",resetRound);$("nextRound").addEventListener("click",nextRound);$("resetGame").addEventListener("click",resetGame);$("openPublic").addEventListener("click",openPublic);
  $("teamAInput").value=state.teams[0];$("teamBInput").value=state.teams[1];window.addEventListener("storage",e=>{if(e.key===KEY){toast("La partida se actualizó en otra ventana.")}});render()}
 document.addEventListener("DOMContentLoaded",init);
+
+const FINAL_QUESTIONS=[{"question":"¿Qué harías si te ganas un viaje con todo pagado?","answers":["Hacer las maletas","Llamar a la familia","Revisar el destino","Sacar fotos","Invitar a alguien"]},{"question":"¿Qué comida chilena elegirías para comer toda una semana?","answers":["Empanadas","Pastel de choclo","Completo","Cazuela","Asado"]},{"question":"¿Qué es lo más extraño que alguien puede encontrar en una cartera?","answers":["Un objeto antiguo","Dulces","Papeles","Maquillaje","Cargadores"]},{"question":"¿Qué harías primero si fueras famoso por un día?","answers":["Publicar en redes","Salir a celebrar","Ayudar a la familia","Ir de compras","Dar entrevistas"]},{"question":"¿Qué frase diría alguien que llega tarde y no quiere dar explicaciones?","answers":["Había mucho tráfico","Se me pasó la hora","No sonó la alarma","Tuve un problema","Ya estoy llegando"]}];
+let finalTimer=null;
+function renderFinalAdmin(){
+ $("finalAdmin").classList.remove("hidden");$("mainGameLayout").classList.add("hidden");$("setupPanel").classList.add("hidden");
+ const d=state.finalDuel;$("finalTeamA").textContent=state.teams[0];$("finalTeamB").textContent=state.teams[1];
+ $("repA").value=d.names[0]||"";$("repB").value=d.names[1]||"";
+ $("finalAdminPlay").classList.toggle("hidden",!d.started);
+ $("finalNameA").textContent=d.names[0];$("finalNameB").textContent=d.names[1];$("finalScoreA").textContent=d.scores[0];$("finalScoreB").textContent=d.scores[1];
+ $("finalClock").textContent=d.remaining;$("finalQuestionCount").textContent="PREGUNTA "+Math.min(d.index+1,5)+" DE 5";$("finalQuestion").textContent=FINAL_QUESTIONS[Math.min(d.index,4)].question;
+ $("finalAdminStatus").textContent=d.done?finalWinnerText():"Cada representante tiene 20 segundos para responder. El anfitrión asigna el punto al equipo que acierta.";
+ $("startFinal").disabled=d.started;
+}
+function finalWinnerText(){const d=state.finalDuel;if(d.scores[0]===d.scores[1])return "¡EMPATE! Duelo final igualado.";return "¡CAMPEÓN: "+state.teams[d.scores[0]>d.scores[1]?0:1]+"!";}
+function renderFinalPublic(){
+ $("publicMainBoard").classList.add("hidden");$("publicFinal").classList.remove("hidden");
+ const d=state.finalDuel;$("pubRepA").textContent=d.names[0];$("pubRepB").textContent=d.names[1];$("pubFinalScoreA").textContent=d.scores[0];$("pubFinalScoreB").textContent=d.scores[1];$("pubFinalClock").textContent=d.remaining;$("pubFinalCount").textContent="PREGUNTA "+Math.min(d.index+1,5)+" DE 5";$("pubFinalQuestion").textContent=FINAL_QUESTIONS[Math.min(d.index,4)].question;
+ $("pubFinalStatus").textContent=d.done?"¡DUELO FINALIZADO!":d.started?"¡Representantes, es su turno!":"Preparando el duelo final…";
+ $("finalWinner").classList.toggle("hidden",!d.done);$("finalWinner").textContent=d.done?finalWinnerText():"";
+}
+function startFinal(){
+ const a=$("repA").value.trim(),b=$("repB").value.trim();if(!a||!b){toast("Escriban el nombre de ambos representantes.");return}
+ state.finalDuel.names=[a,b];state.finalDuel.started=true;state.finalDuel.index=0;state.finalDuel.scores=[0,0];state.finalDuel.remaining=20;state.finalDuel.deadline=Date.now()+20000;state.finalDuel.done=false;save();runFinalClock();
+}
+function runFinalClock(){
+ clearInterval(finalTimer);finalTimer=setInterval(()=>{const d=state.finalDuel;if(!d?.active||!d.started||d.done){clearInterval(finalTimer);return}
+ d.remaining=Math.max(0,Math.ceil((d.deadline-Date.now())/1000));if(d.remaining===0){d.deadline=null;d.status="¡Tiempo terminado!";clearInterval(finalTimer)}
+ save();
+ },250);
+}
+function awardFinal(team){
+ const d=state.finalDuel;if(!d.started||d.done||d.remaining<=0)return;
+ d.scores[team]++;d.deadline=null;d.remaining=0;clearInterval(finalTimer);save();
+}
+function nextFinalQuestion(){
+ const d=state.finalDuel;if(d.done)return;
+ if(d.index>=4){d.done=true;d.deadline=null;clearInterval(finalTimer);save();return}
+ d.index++;d.remaining=20;d.deadline=Date.now()+20000;save();runFinalClock();
+}
+function finishFinal(){state.finalDuel.done=true;state.finalDuel.deadline=null;clearInterval(finalTimer);save()}
+function bindFinalControls(){
+ $("startFinal").addEventListener("click",startFinal);$("finalPointA").addEventListener("click",()=>awardFinal(0));$("finalPointB").addEventListener("click",()=>awardFinal(1));$("finalNext").addEventListener("click",nextFinalQuestion);$("finishFinal").addEventListener("click",finishFinal);
+ if(state.finalDuel?.started&&!state.finalDuel.done&&state.finalDuel.deadline)runFinalClock();
+}
+document.addEventListener("DOMContentLoaded",()=>{if(!isPublic)bindFinalControls()});
