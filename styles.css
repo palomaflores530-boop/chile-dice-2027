@@ -76,3 +76,9 @@
 .result-flash.failure{color:#ff1835!important;-webkit-text-stroke:8px #ffc0c7}
 .result-flash.play{visibility:visible!important;animation:resultFlashShow 1.6s cubic-bezier(.16,.8,.25,1) both!important}
 @keyframes resultFlashShow{0%{opacity:0;transform:scale(.2)}15%{opacity:1;transform:scale(1.08)}30%,78%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.96)}}
+
+/* Check/X del robo: capa fija en pantalla pública, con símbolo de gran tamaño */
+#resultFlash.result-flash{position:fixed!important;inset:0!important;z-index:2147483647!important;width:100vw!important;height:100vh!important;display:flex!important;align-items:center!important;justify-content:center!important;font-family:Arial, sans-serif!important;font-size: min(82vh,82vw)!important;font-weight:900!important;line-height:1!important;opacity:0;visibility:hidden;pointer-events:none!important;background:transparent!important;text-shadow:0 0 14px currentColor,0 0 38px currentColor,0 0 78px currentColor!important}
+#resultFlash.result-flash.success{color:#19ff91!important;-webkit-text-stroke:7px #d6ffea!important}
+#resultFlash.result-flash.failure{color:#ff1738!important;-webkit-text-stroke:7px #ffd1d7!important}
+#resultFlash.result-flash.play{visibility:visible!important;animation:resultFlashShow 1.8s ease-out both!important}
