@@ -41,7 +41,7 @@ function animateAnswerReveal(event){
  overlay.classList.remove("hidden","play");void overlay.offsetWidth;overlay.classList.add("play");
  playAnswerTick();
  clearTimeout(window.answerRevealTimer);
- window.answerRevealTimer=setTimeout(()=>{overlay.classList.remove("play");overlay.classList.add("hidden")},2350);
+ window.answerRevealTimer=setTimeout(()=>{overlay.classList.remove("play");overlay.classList.add("hidden")},5000);
 }
 function sendAnswerReveal(index){
  const answer=ROUNDS[state.round].answers[index];
