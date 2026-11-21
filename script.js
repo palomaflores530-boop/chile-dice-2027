@@ -22,7 +22,7 @@ const ROUNDS = [
  {question:"¿Qué dice un chileno cuando se queda sin plata?",answers:[["Ando pato",30],["Estoy más pelado que rodilla de cabro chico",25],["No tengo ni uno",20],["Estoy cortísimo de lucas",15],["Estoy esperando que me paguen",10]]}
 ];
 const KEY="chile-dice-state-v1";
-const freshState=()=>({round:0,teams:["Los Ganadores","Los Invencibles"],scores:[0,0],revealed:[],strikes:0,turn:null,phase:"duel",stealTeam:null,awardedTeam:null,awardedPoints:0,status:"Selecciona quién ganó el duelo inicial para comenzar.",finished:false,finalDuel:{active:false,started:false,names:["",""],scores:[0,0],index:0,remaining:20,deadline:null,done:false,tieBreak:false}});
+const freshState=()=>({round:0,teams:["Los Ganadores","Los Invencibles"],scores:[0,0],revealed:[],strikes:0,turn:null,phase:"duel",stealTeam:null,awardedTeam:null,awardedPoints:0,status:"Selecciona quién ganó el duelo inicial para comenzar.",finished:false,finalDuel:{active:false,started:false,names:["",""],scores:[0,0],index:0,remaining:20,deadline:null,done:false,tieBreak:false},roundResult:null});
 let state=loadState();
 let lastPublicStrikes=0;
 let lastPublicResultStamp=0;
@@ -51,17 +51,69 @@ function render(){if(isPublic){renderPublic();return} if(state.finalDuel?.active
  const availableOpts='<option value="">Selecciona una respuesta disponible</option>'+ROUNDS[state.round].answers.map((a,i)=>({a,i})).filter(x=>!state.revealed.includes(x.i)).map(({a,i})=>'<option value="'+i+'">'+(i+1)+'. '+escapeHtml(a[0])+' ('+a[1]+' pts)</option>').join("");
  $("answerSelect").innerHTML=availableOpts;$("stealSelect").innerHTML=stealOpts;
  $("correctBtn").disabled=state.phase!=="playing";$("wrongBtn").disabled=state.phase!=="playing";$("stealCorrect").disabled=state.phase!=="steal";$("stealWrong").disabled=state.phase!=="steal";
- $("nextRound").disabled=state.finished;$("nextRound").textContent=state.round>=ROUNDS.length-1?"Iniciar duelo final →":"Siguiente ronda →";
+ $("nextRound").disabled=state.finished;$("nextRound").textContent=state.phase==="finished-round"?(state.round>=ROUNDS.length-1?"Continuar al duelo final →":"Continuar a la siguiente ronda →"):"Siguiente ronda →";
  $("revealAll").disabled=state.phase==="finished-round";
  if(state.finished)showWinner();
 }
-function renderPublic(){ if(state.finalDuel?.active){renderFinalPublic();return} $("publicTeamA").textContent=state.teams[0];$("publicTeamB").textContent=state.teams[1];$("publicScoreA").textContent=state.scores[0];$("publicScoreB").textContent=state.scores[1];$("publicRound").textContent=(state.round+1)+" / "+ROUNDS.length;$("publicProgress").style.setProperty("--progress",((state.round+1)/ROUNDS.length*100)+"%");$("publicEyebrow").textContent="RONDA "+(state.round+1);$("publicQuestion").textContent=ROUNDS[state.round].question;renderBoard($("publicAnswerBoard"),true);$("publicStrikes").innerHTML=[0,1,2].map(i=>'<span class="'+(i<state.strikes?"active":"")+'">X</span>').join("");$("publicStatus").textContent=state.status;if(state.finished)showWinner()}
+function renderPublic(){ if(state.finalDuel?.active){renderFinalPublic();return} $("publicTeamA").textContent=state.teams[0];$("publicTeamB").textContent=state.teams[1];$("publicScoreA").textContent=state.scores[0];$("publicScoreB").textContent=state.scores[1];$("publicRound").textContent=(state.round+1)+" / "+ROUNDS.length;$("publicProgress").style.setProperty("--progress",((state.round+1)/ROUNDS.length*100)+"%");$("publicEyebrow").textContent="RONDA "+(state.round+1);$("publicQuestion").textContent=ROUNDS[state.round].question;renderBoard($("publicAnswerBoard"),true);$("publicStrikes").innerHTML=[0,1,2].map(i=>'<span class="'+(i<state.strikes?"active":"")+'">X</span>').join("");$("publicStatus").textContent=state.status;renderRoundResult(true);if(state.finished)showWinner()}
+
+let lastRoundResultStamp="";
+let resultSoundContext=null;
+function animateResultCount(id,target){
+ const el=$(id);if(!el)return;const end=Math.max(0,Number(target)||0),start=performance.now(),duration=1350;
+ function tick(now){const p=Math.min(1,(now-start)/duration);el.textContent=String(Math.round(end*(1-Math.pow(1-p,3))));if(p<1)requestAnimationFrame(tick)}
+ el.textContent="0";requestAnimationFrame(tick);
+}
+function playRoundCelebration(){
+ try{const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return;
+ resultSoundContext=resultSoundContext||new Ctx();if(resultSoundContext.state==="suspended")resultSoundContext.resume();
+ const ctx=resultSoundContext,now=ctx.currentTime;
+ [523.25,659.25,783.99,1046.5].forEach((freq,i)=>{const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type="sine";osc.frequency.value=freq;gain.gain.setValueAtTime(.0001,now+i*.12);gain.gain.exponentialRampToValueAtTime(.12,now+i*.12+.025);gain.gain.exponentialRampToValueAtTime(.0001,now+i*.12+.34);osc.connect(gain);gain.connect(ctx.destination);osc.start(now+i*.12);osc.stop(now+i*.12+.36)});
+ }catch(e){}
+}
+function enableResultSound(){playRoundCelebration();toast("Sonido activado para los resultados.");}
+function buildResultParticles(id){
+ const box=$(id);if(!box||box.dataset.built)return;box.dataset.built="1";
+ for(let i=0;i<34;i++){const p=document.createElement("i");p.className="result-particle";p.style.setProperty("--x",Math.round(Math.random()*100)+"%");p.style.setProperty("--delay",(Math.random()*2)+"s");p.style.setProperty("--duration",(2.4+Math.random()*2.2)+"s");p.style.setProperty("--drift",Math.round((Math.random()-.5)*180)+"px");box.appendChild(p)}
+}
+function paintResult(prefix,isPublicMode){
+ const r=state.roundResult;if(!r)return;
+ const ids=isPublicMode?{round:"publicResultRoundNo",headline:"publicResultHeadline",nameA:"publicResultTeamNameA",nameB:"publicResultTeamNameB",ptsA:"publicResultRoundPointsA",ptsB:"publicResultRoundPointsB",totalA:"publicResultTotalA",totalB:"publicResultTotalB",cardA:"publicResultTeamCardA",cardB:"publicResultTeamCardB",winner:"publicResultWinnerLabel",particles:"publicResultParticles",overlay:"publicRoundResultOverlay"}:{round:"resultRoundNo",headline:"resultHeadline",nameA:"resultTeamNameA",nameB:"resultTeamNameB",ptsA:"resultRoundPointsA",ptsB:"resultRoundPointsB",totalA:"resultTotalA",totalB:"resultTotalB",cardA:"resultTeamCardA",cardB:"resultTeamCardB",winner:"resultWinnerLabel",particles:"resultParticles",overlay:"roundResultOverlay"};
+ const el=id=>$(ids[id]);if(!el("overlay"))return;
+ el("overlay").classList.remove("hidden");
+ el("round").textContent=String(r.round+1).padStart(2,"0");
+ el("headline").textContent=r.winner===null?"RONDA SIN PUNTOS":"¡"+r.teams[r.winner]+" SE LLEVA LA RONDA!";
+ el("nameA").textContent=r.teams[0];el("nameB").textContent=r.teams[1];
+ el("cardA").classList.toggle("result-champion",r.winner===0);el("cardB").classList.toggle("result-champion",r.winner===1);
+ el("ptsA").textContent=r.points[0];el("ptsB").textContent=r.points[1];el("totalA").textContent=r.totals[0];el("totalB").textContent=r.totals[1];
+ el("winner").textContent=r.winner===null?"No se asignaron puntos":("GANADOR DE LA RONDA: "+r.teams[r.winner]);
+ buildResultParticles(ids.particles);
+ if(lastRoundResultStamp!==r.stamp){
+  lastRoundResultStamp=r.stamp;
+  animateResultCount(ids.ptsA,r.points[0]);animateResultCount(ids.ptsB,r.points[1]);animateResultCount(ids.totalA,r.totals[0]);animateResultCount(ids.totalB,r.totals[1]);
+  if(isPublicMode)playRoundCelebration();
+ }
+}
+function renderRoundResult(isPublicMode){
+ const id=isPublicMode?"publicRoundResultOverlay":"roundResultOverlay",el=$(id);if(!el)return;
+ if(state.roundResult)paintResult("",isPublicMode);else el.classList.add("hidden");
+}
+function continueFromResult(){nextRound()}
+
 function showWinner(){const el=$("winnerOverlay");if(!el)return;el.classList.remove("hidden");let title="¡EMPATE!";if(state.scores[0]>state.scores[1])title="¡GANÓ "+state.teams[0]+"!";if(state.scores[1]>state.scores[0])title="¡GANÓ "+state.teams[1]+"!";$("winnerTitle").textContent=title;$("winnerDescription").textContent=state.scores[0]+" puntos · "+state.scores[1]+" puntos"}
 function chooseTurn(team){if(state.phase==="finished-round"||state.phase==="steal"||state.finished)return;state.turn=team;state.phase="playing";setStatus("Está jugando "+state.teams[team]+". ¡Que comience la ronda!");save()}
 function selectIndex(id){const v=$(id).value;if(v===""){toast("Selecciona una respuesta primero.");return null}return Number(v)}
 function correct(){if(state.phase!=="playing")return;const i=selectIndex("answerSelect");if(i===null)return;if(state.revealed.includes(i)){toast("Esa respuesta ya fue revelada.");return}state.revealed.push(i);const pts=ROUNDS[state.round].answers[i][1];setStatus("¡Correcto! "+state.teams[state.turn]+" encontró una respuesta de "+pts+" puntos. Puntaje de la ronda: "+state.revealed.reduce((n,k)=>n+ROUNDS[state.round].answers[k][1],0)+".");if(state.revealed.length===5)finishRound(state.turn,"¡Todas las respuestas encontradas!");else save()}
 function wrong(){if(state.phase!=="playing")return;state.strikes++;try{if(publicChannel)publicChannel.postMessage({type:"strike",round:state.round,strikes:state.strikes});}catch(e){}if(state.strikes>=3){state.phase="steal";state.stealTeam=1-state.turn;setStatus("¡TERCER ERROR! "+state.teams[state.stealTeam]+" tiene la oportunidad de robar todos los puntos.");}else setStatus("¡Respuesta incorrecta! Error "+state.strikes+" de 3.");save()}
-function finishRound(team,message){if(state.phase==="finished-round")return;state.awardedTeam=team;state.awardedPoints=totalRound();if(team!==null)state.scores[team]+=state.awardedPoints;state.phase="finished-round";setStatus(message+(team===null?"":" "+state.teams[team]+" gana "+state.awardedPoints+" puntos de la ronda."));save()}
+function finishRound(team,message){
+ if(state.phase==="finished-round")return;
+ state.awardedTeam=team;state.awardedPoints=team===null?0:totalRound();
+ if(team!==null)state.scores[team]+=state.awardedPoints;
+ state.phase="finished-round";
+ state.roundResult={round:state.round,teams:[...state.teams],winner:team,points:[team===0?state.awardedPoints:0,team===1?state.awardedPoints:0],totals:[...state.scores],stamp:String(Date.now())+"-"+state.round+"-"+Math.random().toString(36).slice(2)};
+ setStatus(message+(team===null?"":" "+state.teams[team]+" gana "+state.awardedPoints+" puntos de la ronda."));
+ save();
+}
 function steal(correctAnswer){
  if(state.phase!=="steal")return;
  if(correctAnswer){
@@ -76,13 +128,13 @@ function steal(correctAnswer){
   finishRound(state.turn,"¡ROBO FALLIDO! "+state.teams[state.turn]+" conserva los puntos de la ronda.");
  }
 }
-function resetRound(){if(state.awardedTeam!==null&&state.awardedTeam!==undefined)state.scores[state.awardedTeam]=Math.max(0,state.scores[state.awardedTeam]-state.awardedPoints);state.revealed=[];state.strikes=0;state.turn=null;state.phase="duel";state.stealTeam=null;state.awardedTeam=null;state.awardedPoints=0;state.status="Ronda reiniciada. Selecciona quién ganó el duelo inicial.";state.finished=false;save()}
-function nextRound(){if(state.round>=ROUNDS.length-1){state.finished=true;state.finalDuel=state.finalDuel||{active:false,started:false,names:["",""],scores:[0,0],index:0,remaining:20,deadline:null,done:false,tieBreak:false};state.finalDuel.active=true;state.status="¡Comienza el duelo final!";save();return}state.round++;state.revealed=[];state.strikes=0;state.turn=null;state.phase="duel";state.stealTeam=null;state.awardedTeam=null;state.awardedPoints=0;state.status="Nueva ronda. Selecciona quién ganó el duelo inicial.";save()}
+function resetRound(){if(state.awardedTeam!==null&&state.awardedTeam!==undefined)state.scores[state.awardedTeam]=Math.max(0,state.scores[state.awardedTeam]-state.awardedPoints);state.roundResult=null;state.revealed=[];state.strikes=0;state.turn=null;state.phase="duel";state.stealTeam=null;state.awardedTeam=null;state.awardedPoints=0;state.status="Ronda reiniciada. Selecciona quién ganó el duelo inicial.";state.finished=false;save()}
+function nextRound(){if(state.phase!=="finished-round"&&!state.finalDuel?.active){toast("Finaliza la ronda antes de continuar.");return}state.roundResult=null;if(state.round>=ROUNDS.length-1){state.finished=true;state.finalDuel=state.finalDuel||{active:false,started:false,names:["",""],scores:[0,0],index:0,remaining:20,deadline:null,done:false,tieBreak:false};state.finalDuel.active=true;state.status="¡Comienza el duelo final!";save();return}state.round++;state.revealed=[];state.strikes=0;state.turn=null;state.phase="duel";state.stealTeam=null;state.awardedTeam=null;state.awardedPoints=0;state.status="Nueva ronda. Selecciona quién ganó el duelo inicial.";save()}
 function resetGame(){if(!confirm("¿Reiniciar toda la partida y borrar los puntajes?"))return;state=freshState();save()}
 function openPublic(){const url=new URL(location.href);url.searchParams.set("public","1");window.open(url.toString(),"CHILE_DICE_PUBLICO","width=1200,height=850")}
-function init(){try{if("BroadcastChannel" in window){publicChannel=new BroadcastChannel("chile-dice-live");}}catch(e){}if(isPublic){$("hostApp").classList.add("hidden");$("publicApp").classList.remove("hidden");lastPublicStrikes=state.strikes;lastPublicResultStamp=state.lastResultEvent?.stamp||0;renderPublic();if(publicChannel)publicChannel.onmessage=e=>{const m=e.data||{};if(m.type==="strike"&&m.round===state.round){animateErrorFlash();}if(m.type==="steal-result"&&m.round===state.round){animateStealResult(!!m.success);}};window.addEventListener("storage",e=>{if(e.key==="chile-dice-result-event"&&e.newValue){try{const event=JSON.parse(e.newValue);if(event.type==="steal-result"&&event.round===state.round)animateStealResult(!!event.success);}catch(err){}}if(e.key===KEY&&e.newValue){const incoming=JSON.parse(e.newValue);if(incoming.round!==state.round)lastPublicStrikes=0;const newStrike=incoming.strikes>lastPublicStrikes;const resultEvent=incoming.lastResultEvent;const newResult=!!(resultEvent&&resultEvent.stamp&&resultEvent.stamp!==lastPublicResultStamp);state=incoming;renderPublic();if(newStrike)animateErrorFlash();if(newResult){animateStealResult(!!resultEvent.success);lastPublicResultStamp=resultEvent.stamp;}lastPublicStrikes=state.strikes}});window.addEventListener("focus",()=>{const incoming=loadState();if(incoming.round!==state.round)lastPublicStrikes=0;const newStrike=incoming.strikes>lastPublicStrikes;const resultEvent=incoming.lastResultEvent;const newResult=!!(resultEvent&&resultEvent.stamp&&resultEvent.stamp!==lastPublicResultStamp);state=incoming;renderPublic();if(newStrike)animateErrorFlash();if(newResult){animateStealResult(!!resultEvent.success);lastPublicResultStamp=resultEvent.stamp;}lastPublicStrikes=state.strikes});return}
+function init(){try{if("BroadcastChannel" in window){publicChannel=new BroadcastChannel("chile-dice-live");}}catch(e){}if(isPublic){$("hostApp").classList.add("hidden");$("publicApp").classList.remove("hidden");$("publicContinueRound").addEventListener("click",continueFromResult);$("publicEnableResultSound").addEventListener("click",enableResultSound);lastPublicStrikes=state.strikes;lastPublicResultStamp=state.lastResultEvent?.stamp||0;renderPublic();if(publicChannel)publicChannel.onmessage=e=>{const m=e.data||{};if(m.type==="strike"&&m.round===state.round){animateErrorFlash();}if(m.type==="steal-result"&&m.round===state.round){animateStealResult(!!m.success);}};window.addEventListener("storage",e=>{if(e.key==="chile-dice-result-event"&&e.newValue){try{const event=JSON.parse(e.newValue);if(event.type==="steal-result"&&event.round===state.round)animateStealResult(!!event.success);}catch(err){}}if(e.key===KEY&&e.newValue){const incoming=JSON.parse(e.newValue);if(incoming.round!==state.round)lastPublicStrikes=0;const newStrike=incoming.strikes>lastPublicStrikes;const resultEvent=incoming.lastResultEvent;const newResult=!!(resultEvent&&resultEvent.stamp&&resultEvent.stamp!==lastPublicResultStamp);state=incoming;renderPublic();if(newStrike)animateErrorFlash();if(newResult){animateStealResult(!!resultEvent.success);lastPublicResultStamp=resultEvent.stamp;}lastPublicStrikes=state.strikes}});window.addEventListener("focus",()=>{const incoming=loadState();if(incoming.round!==state.round)lastPublicStrikes=0;const newStrike=incoming.strikes>lastPublicStrikes;const resultEvent=incoming.lastResultEvent;const newResult=!!(resultEvent&&resultEvent.stamp&&resultEvent.stamp!==lastPublicResultStamp);state=incoming;renderPublic();if(newStrike)animateErrorFlash();if(newResult){animateStealResult(!!resultEvent.success);lastPublicResultStamp=resultEvent.stamp;}lastPublicStrikes=state.strikes});return}
  $("saveTeams").addEventListener("click",()=>{state.teams=[$("teamAInput").value.trim()||"Equipo 1",$("teamBInput").value.trim()||"Equipo 2"];save();toast("Nombres de equipos guardados.")});
- $("turnA").addEventListener("click",()=>chooseTurn(0));$("turnB").addEventListener("click",()=>chooseTurn(1));$("correctBtn").addEventListener("click",correct);$("wrongBtn").addEventListener("click",wrong);$("stealCorrect").addEventListener("click",()=>steal(true));$("stealWrong").addEventListener("click",()=>steal(false));$("revealAll").addEventListener("click",()=>{state.revealed=[0,1,2,3,4];finishRound(null,"Respuestas restantes reveladas. No se suman puntos adicionales.")});$("resetRound").addEventListener("click",resetRound);$("nextRound").addEventListener("click",nextRound);$("resetGame").addEventListener("click",resetGame);$("openPublic").addEventListener("click",openPublic);
+ $("turnA").addEventListener("click",()=>chooseTurn(0));$("turnB").addEventListener("click",()=>chooseTurn(1));$("correctBtn").addEventListener("click",correct);$("wrongBtn").addEventListener("click",wrong);$("stealCorrect").addEventListener("click",()=>steal(true));$("stealWrong").addEventListener("click",()=>steal(false));$("revealAll").addEventListener("click",()=>{state.revealed=[0,1,2,3,4];finishRound(null,"Respuestas restantes reveladas. No se suman puntos adicionales.")});$("resetRound").addEventListener("click",resetRound);$("nextRound").addEventListener("click",nextRound);$("resetGame").addEventListener("click",resetGame);$("openPublic").addEventListener("click",openPublic);$("continueRound").addEventListener("click",continueFromResult);$("enableResultSound").addEventListener("click",enableResultSound);
  $("teamAInput").value=state.teams[0];$("teamBInput").value=state.teams[1];window.addEventListener("storage",e=>{if(e.key===KEY){toast("La partida se actualizó en otra ventana.")}});render()}
 document.addEventListener("DOMContentLoaded",init);
 
