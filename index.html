@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#071426">
   <title>CHILE DICE | Juego familiar</title>
-  <link rel="stylesheet" href="styles.css?v=9">
-  <script src="script.js?v=13" defer></script>
+  <link rel="stylesheet" href="styles.css?v=10">
+  <script src="script.js?v=14" defer></script>
 </head>
 <body>
   <main id="hostApp" class="app">
@@ -27,7 +27,17 @@
       <button class="btn btn-gold" id="saveTeams">Guardar equipos</button>
     </section>
 
-    <section class="game-layout">
+
+    <section id="finalAdmin" class="panel final-panel hidden">
+      <p class="eyebrow gold">GRAN FINAL · DUELO DE CAMPEONES</p><h2>Presenten a sus representantes</h2>
+      <div class="final-name-grid"><label>Representante de <span id="finalTeamA"></span><input id="repA" maxlength="28" placeholder="Nombre del representante"></label><label>Representante de <span id="finalTeamB"></span><input id="repB" maxlength="28" placeholder="Nombre del representante"></label></div>
+      <button class="btn btn-gold full" id="startFinal">Comenzar duelo final</button>
+      <div id="finalAdminPlay" class="hidden"><div class="final-scoreline"><div><small id="finalNameA"></small><strong id="finalScoreA">0</strong></div><div class="final-clock" id="finalClock">20</div><div><small id="finalNameB"></small><strong id="finalScoreB">0</strong></div></div>
+      <p class="eyebrow gold" id="finalQuestionCount">PREGUNTA 1 DE 5</p><h2 id="finalQuestion"></h2><div class="final-admin-actions"><button class="btn btn-team-a" id="finalPointA">Punto para equipo 1</button><button class="btn btn-team-b" id="finalPointB">Punto para equipo 2</button></div>
+      <button class="btn btn-outline full" id="finalNext">Siguiente pregunta →</button><button class="btn btn-danger full" id="finishFinal">Finalizar duelo</button></div>
+      <p class="status-message" id="finalAdminStatus">Los equipos deben escribir el nombre de su representante.</p>
+    </section>
+    <section class="game-layout" id="mainGameLayout">
       <section class="main-panel panel">
         <div class="round-heading"><div><p class="eyebrow gold" id="roundEyebrow">RONDA 1</p><h2 id="questionText">¿Qué es lo primero que haces al despertar?</h2></div><span class="round-tag" id="roundTag">01</span></div>
         <div class="answer-board" id="answerBoard"></div>
@@ -71,7 +81,9 @@
       <div class="score-center"><span id="publicRoundLabel">RONDA</span><strong id="publicRound">1 / 6</strong><div class="round-progress" id="publicProgress"></div></div>
       <article class="team-score team-b"><label id="publicTeamB">EQUIPO 2</label><strong id="publicScoreB">0</strong><small>PUNTOS</small></article>
     </section>
-    <section class="public-board panel"><p class="eyebrow gold" id="publicEyebrow">RONDA 1</p><h2 id="publicQuestion">Pregunta del juego</h2><div class="answer-board public-answers" id="publicAnswerBoard"></div><div class="strikes-area"><span class="eyebrow">ERRORES</span><div class="strikes" id="publicStrikes"><span> X </span><span> X </span><span> X </span></div></div><div class="status-message" id="publicStatus">¡A jugar!</div></section>
+
+    <section id="publicFinal" class="public-board panel final-public hidden"><p class="eyebrow gold">GRAN FINAL · DUELO DE CAMPEONES</p><div class="final-public-names"><div><small id="pubRepA"></small><strong id="pubFinalScoreA">0</strong></div><div class="final-vs">VS</div><div><small id="pubRepB"></small><strong id="pubFinalScoreB">0</strong></div></div><div class="final-clock public-clock" id="pubFinalClock">20</div><p class="eyebrow gold" id="pubFinalCount">PREGUNTA 1 DE 5</p><h2 id="pubFinalQuestion"></h2><div class="status-message" id="pubFinalStatus">¡Que comience el duelo!</div><div id="finalWinner" class="final-winner hidden"></div></section>
+    <section class="public-board panel" id="publicMainBoard"><p class="eyebrow gold" id="publicEyebrow">RONDA 1</p><h2 id="publicQuestion">Pregunta del juego</h2><div class="answer-board public-answers" id="publicAnswerBoard"></div><div class="strikes-area"><span class="eyebrow">ERRORES</span><div class="strikes" id="publicStrikes"><span> X </span><span> X </span><span> X </span></div></div><div class="status-message" id="publicStatus">¡A jugar!</div></section>
     <div class="error-flash" id="errorFlash" aria-hidden="true"><svg viewBox="0 0 400 400" role="presentation"><defs><filter id="xGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="13" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g filter="url(#xGlow)" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M82 82 L318 318 M318 82 L82 318" stroke="#a00018" stroke-width="88"/><path d="M82 82 L318 318 M318 82 L82 318" stroke="#f20b2c" stroke-width="67"/><path d="M82 82 L318 318 M318 82 L82 318" stroke="#ff9aa5" stroke-width="8"/><path d="M82 82 L318 318 M318 82 L82 318" stroke="#ff344f" stroke-width="3"/></g></svg></div>
 
     <div class="winner-overlay hidden" id="winnerOverlay"><div class="winner-card"><p class="eyebrow gold">FIN DEL JUEGO</p><h2 id="winnerTitle">¡TENEMOS GANADOR!</h2><p id="winnerDescription"></p></div></div>
