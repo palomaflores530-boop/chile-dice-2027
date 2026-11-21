@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#071426">
   <title>CHILE DICE | Juego familiar</title>
   <link rel="stylesheet" href="styles.css?v=7">
-  <script src="script.js?v=11" defer></script>
+  <script src="script.js?v=12" defer></script>
 </head>
 <body>
   <main id="hostApp" class="app">
@@ -73,9 +73,10 @@
     </section>
     <section class="public-board panel"><p class="eyebrow gold" id="publicEyebrow">RONDA 1</p><h2 id="publicQuestion">Pregunta del juego</h2><div class="answer-board public-answers" id="publicAnswerBoard"></div><div class="strikes-area"><span class="eyebrow">ERRORES</span><div class="strikes" id="publicStrikes"><span> X </span><span> X </span><span> X </span></div></div><div class="status-message" id="publicStatus">¡A jugar!</div></section>
     <div class="error-flash" id="errorFlash" aria-hidden="true"><svg viewBox="0 0 400 400" role="presentation"><defs><filter id="xGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="13" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g filter="url(#xGlow)" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M82 82 L318 318 M318 82 L82 318" stroke="#a00018" stroke-width="88"/><path d="M82 82 L318 318 M318 82 L82 318" stroke="#f20b2c" stroke-width="67"/><path d="M82 82 L318 318 M318 82 L82 318" stroke="#ff9aa5" stroke-width="8"/><path d="M82 82 L318 318 M318 82 L82 318" stroke="#ff344f" stroke-width="3"/></g></svg></div>
-    <div class="result-flash" id="resultFlash" aria-hidden="true"></div>
+
     <div class="winner-overlay hidden" id="winnerOverlay"><div class="winner-card"><p class="eyebrow gold">FIN DEL JUEGO</p><h2 id="winnerTitle">¡TENEMOS GANADOR!</h2><p id="winnerDescription"></p></div></div>
   </main>
+    <div class="result-flash" id="resultFlash" aria-hidden="true"></div>
   <div class="toast" id="toast" role="status"></div>
 </body>
 </html>
