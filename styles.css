@@ -82,3 +82,9 @@
 #resultFlash.result-flash.success{color:#19ff91!important;-webkit-text-stroke:7px #d6ffea!important}
 #resultFlash.result-flash.failure{color:#ff1738!important;-webkit-text-stroke:7px #ffd1d7!important}
 #resultFlash.result-flash.play{visibility:visible!important;animation:resultFlashShow 1.8s ease-out both!important}
+
+/* Forzar overlay del resultado fuera de todos los contenedores */
+body>#resultFlash.result-flash{position:fixed!important;inset:0!important;z-index:2147483647!important;width:100vw!important;height:100vh!important;display:flex!important;align-items:center!important;justify-content:center!important;font-family:Arial,sans-serif!important;font-size:min(82vh,82vw)!important;font-weight:900!important;line-height:1!important;opacity:0;visibility:hidden;pointer-events:none!important;background:transparent!important;margin:0!important;padding:0!important;text-shadow:0 0 16px currentColor,0 0 45px currentColor,0 0 90px currentColor!important}
+body>#resultFlash.result-flash.success{color:#18ff91!important;-webkit-text-stroke:8px #d6ffea!important}
+body>#resultFlash.result-flash.failure{color:#ff1738!important;-webkit-text-stroke:8px #ffd1d7!important}
+body>#resultFlash.result-flash.play{visibility:visible!important;animation:resultFlashShow 2.2s ease-out both!important}
