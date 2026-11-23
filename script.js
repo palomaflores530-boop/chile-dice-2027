@@ -53,6 +53,13 @@ function currentRound(){return ALL_ROUNDS[(state.playRounds||ALL_ROUNDS.map((_,i
 const KEY="chile-dice-state-v1";
 const freshState=()=>({round:0,playRounds:shuffledRoundIds(),questionVisible:false,teams:["Los Ganadores","Los Invencibles"],scores:[0,0],revealed:[],strikes:0,turn:null,phase:"duel",stealTeam:null,awardedTeam:null,awardedPoints:0,status:"Selecciona quién ganó el duelo inicial para comenzar.",finished:false,finalDuel:{active:false,started:false,names:["",""],scores:[0,0],index:0,remaining:20,deadline:null,done:false,tieBreak:false},roundResult:null});
 let state=loadState();
+
+// Recupera partidas que quedaron en la lógica antigua al fallar ambos capitanes.
+if(state.phase==="playing" && typeof state.status==="string" && state.status.includes("Ambos capitanes fallaron")){
+ state.phase="duel-answer";
+ state.duelAttempts=Math.max(2,Number(state.duelAttempts)||2);
+ state.status="El duelo continúa: responde el capitán de "+state.teams[state.turn]+". Marca ACERTÓ o FALLÓ en el panel del anfitrión.";
+}
 if(!Array.isArray(state.playRounds)||state.playRounds.length!==PLAY_ROUND_COUNT){state.playRounds=ALL_ROUNDS.slice(0,PLAY_ROUND_COUNT).map((_,i)=>i);state.questionVisible=true;}
 let lastPublicStrikes=0;
 let lastPublicResultStamp=0;
