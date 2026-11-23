@@ -259,3 +259,9 @@ body:has(#publicApp:not(.hidden))>#publicApp.public-app:not(.hidden)>.public-hea
 
 /* Revelación más ágil: ficha breve y respuesta visible al terminar */
 .answer-reveal-overlay.play .answer-reveal-card{animation:answerRevealPop 2.4s cubic-bezier(.16,.8,.25,1) both!important}
+
+.captain-duel-controls{margin:16px 0;padding:16px;border:1px solid #e7b944;border-radius:14px;background:linear-gradient(135deg,#132b43,#0b1b2c);box-shadow:0 0 18px #e7b94422}
+.captain-duel-prompt{font-weight:800;margin:8px 0 14px}
+.captain-duel-actions{display:grid;grid-template-columns:1fr 1.5fr;gap:10px}
+.captain-duel-actions button{min-height:52px;font-weight:900}
+@media(max-width:700px){.captain-duel-actions{grid-template-columns:1fr}}
