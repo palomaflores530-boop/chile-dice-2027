@@ -70,41 +70,14 @@ function animateAnswerReveal(event){
  if(!isPublic||!event||event.round!==state.round)return;
  if(window.lastRevealStamp===event.stamp)return;
  window.lastRevealStamp=event.stamp;
- const showReveal=()=>{
-  if(!isPublic||event.round!==state.round)return;
-  const overlay=$("answerRevealOverlay");if(!overlay)return;
-  $("answerRevealNumber").textContent=String(event.index+1).padStart(2,"0");
-  $("answerRevealText").textContent=event.answer||"RESPUESTA";
-  $("answerRevealPoints").textContent=String(event.points||0);
-  overlay.classList.remove("hidden","play");void overlay.offsetWidth;overlay.classList.add("play");
-  playAnswerTick();
-  clearTimeout(window.answerRevealTimer);
-  window.answerRevealTimer=setTimeout(()=>{overlay.classList.remove("play");overlay.classList.add("hidden")},5000);
- };
- const suspense=$("audio-suspenso");
- if(!suspense){setTimeout(showReveal,6000);return;}
- let finished=false;
- const finish=()=>{if(finished)return;finished=true;clearTimeout(window.suspenseFallbackTimer);suspense.onended=null;showReveal();};
- const startSuspense=()=>{
-  try{
-   suspense.pause();suspense.currentTime=0;
-   const duration=Number.isFinite(suspense.duration)&&suspense.duration>0?suspense.duration:6;
-   suspense.onended=finish;
-   window.suspenseFallbackTimer=setTimeout(finish,(duration+0.35)*1000);
-   const playback=suspense.play();
-   if(playback&&playback.catch)playback.catch(()=>{});
-  }catch(e){
-   const duration=Number.isFinite(suspense.duration)&&suspense.duration>0?suspense.duration:6;
-   window.suspenseFallbackTimer=setTimeout(finish,(duration+0.35)*1000);
-  }
- };
- if(suspense.readyState>=1)startSuspense();
- else{
-  const ready=()=>{suspense.removeEventListener("loadedmetadata",ready);startSuspense();};
-  suspense.addEventListener("loadedmetadata",ready);
-  suspense.load();
-  window.suspenseFallbackTimer=setTimeout(()=>{if(!finished){suspense.removeEventListener("loadedmetadata",ready);startSuspense();}},2500);
- }
+ const overlay=$("answerRevealOverlay");if(!overlay)return;
+ $("answerRevealNumber").textContent=String(event.index+1).padStart(2,"0");
+ $("answerRevealText").textContent=event.answer||"RESPUESTA";
+ $("answerRevealPoints").textContent=String(event.points||0);
+ overlay.classList.remove("hidden","play");void overlay.offsetWidth;overlay.classList.add("play");
+ playAnswerTick();
+ clearTimeout(window.answerRevealTimer);
+ window.answerRevealTimer=setTimeout(()=>{overlay.classList.remove("play");overlay.classList.add("hidden")},2400);
 }
 function sendAnswerReveal(index){
  const answer=currentRound().answers[index];
@@ -139,7 +112,7 @@ function render(){if(isPublic){renderPublic();return} if(state.finalDuel?.active
  const stealOpts='<option value="">Selecciona una respuesta oculta</option>'+currentRound().answers.map((a,i)=>({a,i})).filter(x=>!state.revealed.includes(x.i)).map(({a,i})=>'<option value="'+i+'">'+(i+1)+'. '+escapeHtml(a[0])+' ('+a[1]+' pts)</option>').join("");
  const availableOpts='<option value="">Selecciona una respuesta disponible</option>'+currentRound().answers.map((a,i)=>({a,i})).filter(x=>!state.revealed.includes(x.i)).map(({a,i})=>'<option value="'+i+'">'+(i+1)+'. '+escapeHtml(a[0])+' ('+a[1]+' pts)</option>').join("");
  $("answerSelect").innerHTML=availableOpts;$("stealSelect").innerHTML=stealOpts;
- $("correctBtn").disabled=state.phase!=="playing";$("wrongBtn").disabled=state.phase!=="playing";$("stealCorrect").disabled=state.phase!=="steal";$("stealWrong").disabled=state.phase!=="steal";
+ $("correctBtn").disabled=!(state.phase==="playing"||state.phase==="duel-answer");$("wrongBtn").disabled=!(state.phase==="playing"||state.phase==="duel-answer");$("stealCorrect").disabled=state.phase!=="steal";$("stealWrong").disabled=state.phase!=="steal";
  $("nextRound").disabled=state.finished;$("nextRound").textContent=state.phase==="finished-round"?(state.round>=PLAY_ROUND_COUNT-1?"Continuar al duelo final →":"Continuar a la siguiente ronda →"):"Siguiente ronda →";
  $("revealAll").disabled=state.phase==="finished-round";
  renderRoundResult(false);if(state.finished)showWinner();
@@ -191,10 +164,26 @@ function renderRoundResult(isPublicMode){
 function continueFromResult(){nextRound()}
 
 function showWinner(){if(!window.chileDiceVictoryPlayed){window.chileDiceVictoryPlayed=true;try{if(publicChannel)publicChannel.postMessage({type:"game-victory"});}catch(e){}}const el=$("winnerOverlay");if(!el)return;el.classList.remove("hidden");let title="¡EMPATE!";if(state.scores[0]>state.scores[1])title="¡GANÓ "+state.teams[0]+"!";if(state.scores[1]>state.scores[0])title="¡GANÓ "+state.teams[1]+"!";$("winnerTitle").textContent=title;$("winnerDescription").textContent=state.scores[0]+" puntos · "+state.scores[1]+" puntos"}
-function chooseTurn(team){if(state.phase==="finished-round"||state.phase==="steal"||state.finished)return;state.turn=team;state.phase="playing";setStatus("Está jugando "+state.teams[team]+". ¡Que comience la ronda!");save()}
+function chooseTurn(team){
+ if(state.finished||state.phase==="finished-round"||state.phase==="steal")return;
+ if(state.phase==="duel"){state.turn=team;state.duelAttempts=0;state.phase="duel-answer";setStatus("¡"+state.teams[team]+" responde primero! El anfitrión debe marcar si acertó o falló.");save();return}
+ if(state.phase==="duel-answer"){toast("Primero marca si el capitán respondió bien o mal.");return}
+ state.turn=team;state.phase="playing";setStatus("Está jugando "+state.teams[team]+". ¡Que comience la ronda!");save()
+}
 function selectIndex(id){const v=$(id).value;if(v===""){toast("Selecciona una respuesta primero.");return null}return Number(v)}
-function correct(){if(state.phase!=="playing")return;const i=selectIndex("answerSelect");if(i===null)return;if(state.revealed.includes(i)){toast("Esa respuesta ya fue revelada.");return}state.revealed.push(i);sendAnswerReveal(i);const pts=currentRound().answers[i][1];setStatus("¡Correcto! "+state.teams[state.turn]+" encontró una respuesta de "+pts+" puntos. Puntaje de la ronda: "+state.revealed.reduce((n,k)=>n+currentRound().answers[k][1],0)+".");if(state.revealed.length===currentRound().answers.length)finishRound(state.turn,"¡Todas las respuestas encontradas!");else save()}
-function wrong(){if(state.phase!=="playing")return;state.strikes++;try{if(publicChannel)publicChannel.postMessage({type:"strike",round:state.round,strikes:state.strikes});}catch(e){}if(state.strikes>=3){state.phase="steal";state.stealTeam=1-state.turn;setStatus("¡TERCER ERROR! "+state.teams[state.stealTeam]+" tiene la oportunidad de robar todos los puntos.");}else setStatus("¡Respuesta incorrecta! Error "+state.strikes+" de 3.");save()}
+function correct(){
+ if(state.phase==="duel-answer"){setStatus("¡Respuesta correcta! "+state.teams[state.turn]+" gana el duelo inicial y comienza jugando.");state.phase="playing";save();return}
+ if(state.phase!=="playing")return;const i=selectIndex("answerSelect");if(i===null)return;if(state.revealed.includes(i)){toast("Esa respuesta ya fue revelada.");return}state.revealed.push(i);sendAnswerReveal(i);const pts=currentRound().answers[i][1];setStatus("¡Correcto! "+state.teams[state.turn]+" encontró una respuesta de "+pts+" puntos. Puntaje de la ronda: "+state.revealed.reduce((n,k)=>n+currentRound().answers[k][1],0)+".");if(state.revealed.length===currentRound().answers.length)finishRound(state.turn,"¡Todas las respuestas encontradas!");else save()}
+function wrong(){
+ if(state.phase==="duel-answer"){
+  const failedTeam=state.turn;
+  try{if(publicChannel)publicChannel.postMessage({type:"duel-miss",round:state.round,team:failedTeam});}catch(e){}
+  state.duelAttempts=(state.duelAttempts||0)+1;
+  if(state.duelAttempts===1){state.turn=1-failedTeam;setStatus("¡X! "+state.teams[failedTeam]+" falló. Ahora responde el capitán de "+state.teams[state.turn]+".");}
+  else{state.phase="playing";setStatus("¡Ambos capitanes fallaron! Comienza la ronda "+state.teams[state.turn]+".");}
+  save();return;
+ }
+ if(state.phase!=="playing")return;state.strikes++;try{if(publicChannel)publicChannel.postMessage({type:"strike",round:state.round,strikes:state.strikes});}catch(e){}if(state.strikes>=3){state.phase="steal";state.stealTeam=1-state.turn;setStatus("¡TERCER ERROR! "+state.teams[state.stealTeam]+" tiene la oportunidad de robar todos los puntos.");}else setStatus("¡Respuesta incorrecta! Error "+state.strikes+" de 3.");save()}
 function finishRound(team,message){
  if(state.phase==="finished-round")return;
  state.awardedTeam=team;state.awardedPoints=team===null?0:totalRound();
@@ -224,7 +213,7 @@ function resetRound(){if(state.awardedTeam!==null&&state.awardedTeam!==undefined
 function nextRound(){if(state.phase!=="finished-round"&&!state.finalDuel?.active){toast("Finaliza la ronda antes de continuar.");return}["roundResultOverlay","publicRoundResultOverlay"].forEach(id=>{const el=$(id);if(el){el.classList.add("hidden");el.style.removeProperty("display")}});state.roundResult=null;if(state.round>=PLAY_ROUND_COUNT-1){state.finished=true;state.finalDuel=state.finalDuel||{active:false,started:false,names:["",""],scores:[0,0],index:0,remaining:20,deadline:null,done:false,tieBreak:false};state.finalDuel.active=true;state.status="¡Comienza el duelo final!";save();return}state.round++;state.revealed=[];state.questionVisible=false;state.strikes=0;state.turn=null;state.phase="duel";state.stealTeam=null;state.awardedTeam=null;state.awardedPoints=0;state.status="Nueva ronda. Selecciona quién ganó el duelo inicial.";save()}
 function resetGame(){if(!confirm("¿Reiniciar toda la partida y borrar los puntajes?"))return;state=freshState();save()}
 function openPublic(){const url=new URL(location.href);url.searchParams.set("public","1");const w=Math.max(1200,screen.availWidth||1200),h=Math.max(800,screen.availHeight||800);const tv=window.open(url.toString(),"CHILE_DICE_PUBLICO",`width=${w},height=${h},left=0,top=0`);if(tv){try{tv.moveTo(0,0);tv.resizeTo(w,h);tv.focus()}catch(e){}}}
-function init(){try{if("BroadcastChannel" in window){publicChannel=new BroadcastChannel("chile-dice-live");}}catch(e){}if(isPublic){$("hostApp").classList.add("hidden");$("publicApp").classList.remove("hidden");$("publicContinueRound").addEventListener("click",continueFromResult);$("publicEnableResultSound").addEventListener("click",enableResultSound);$("publicMusicToggle").addEventListener("click",toggleGameMusic);lastPublicStrikes=state.strikes;lastPublicResultStamp=state.lastResultEvent?.stamp||0;renderPublic();if(publicChannel)publicChannel.onmessage=e=>{const m=e.data||{};if(m.type==="state-update"&&m.state){state=m.state;renderPublic();lastPublicStrikes=state.strikes;return}if(m.type==="strike"&&m.round===state.round){playCustomSound("Respuestaincorrecta");animateErrorFlash();playWrongX();}if(m.type==="answer-reveal"&&m.round===state.round){animateAnswerReveal(m);}if(m.type==="steal-result"&&m.round===state.round){playCustomSound(m.success?"roboexitoso":"robofallido");animateStealResult(!!m.success);}if(m.type==="round-finished"&&m.round===state.round){playCustomSound("celebracion");}if(m.type==="game-victory"){playCustomSound("victoria");}};window.addEventListener("storage",e=>{if(e.key==="chile-dice-answer-event"&&e.newValue){try{animateAnswerReveal(JSON.parse(e.newValue));}catch(err){}}if(e.key==="chile-dice-result-event"&&e.newValue){try{const event=JSON.parse(e.newValue);if(event.type==="steal-result"&&event.round===state.round)animateStealResult(!!event.success);}catch(err){}}if(e.key===KEY&&e.newValue){const incoming=JSON.parse(e.newValue);if(incoming.round!==state.round)lastPublicStrikes=0;const newStrike=incoming.strikes>lastPublicStrikes;const resultEvent=incoming.lastResultEvent;const newResult=!!(resultEvent&&resultEvent.stamp&&resultEvent.stamp!==lastPublicResultStamp);state=incoming;renderPublic();if(newStrike)animateErrorFlash();if(newResult){animateStealResult(!!resultEvent.success);lastPublicResultStamp=resultEvent.stamp;}lastPublicStrikes=state.strikes}});window.addEventListener("focus",()=>{const incoming=loadState();if(incoming.round!==state.round)lastPublicStrikes=0;const newStrike=incoming.strikes>lastPublicStrikes;const resultEvent=incoming.lastResultEvent;const newResult=!!(resultEvent&&resultEvent.stamp&&resultEvent.stamp!==lastPublicResultStamp);state=incoming;renderPublic();if(newStrike)animateErrorFlash();if(newResult){animateStealResult(!!resultEvent.success);lastPublicResultStamp=resultEvent.stamp;}lastPublicStrikes=state.strikes});return}
+function init(){try{if("BroadcastChannel" in window){publicChannel=new BroadcastChannel("chile-dice-live");}}catch(e){}if(isPublic){$("hostApp").classList.add("hidden");$("publicApp").classList.remove("hidden");$("publicContinueRound").addEventListener("click",continueFromResult);$("publicEnableResultSound").addEventListener("click",enableResultSound);$("publicMusicToggle").addEventListener("click",toggleGameMusic);lastPublicStrikes=state.strikes;lastPublicResultStamp=state.lastResultEvent?.stamp||0;renderPublic();if(publicChannel)publicChannel.onmessage=e=>{const m=e.data||{};if(m.type==="state-update"&&m.state){state=m.state;renderPublic();lastPublicStrikes=state.strikes;return}if(m.type==="strike"&&m.round===state.round){playCustomSound("Respuestaincorrecta");animateErrorFlash();playWrongX();}if(m.type==="duel-miss"&&m.round===state.round){playCustomSound("Respuestaincorrecta");animateErrorFlash();playWrongX();}if(m.type==="answer-reveal"&&m.round===state.round){animateAnswerReveal(m);}if(m.type==="steal-result"&&m.round===state.round){playCustomSound(m.success?"roboexitoso":"robofallido");animateStealResult(!!m.success);}if(m.type==="round-finished"&&m.round===state.round){playCustomSound("celebracion");}if(m.type==="game-victory"){playCustomSound("victoria");}};window.addEventListener("storage",e=>{if(e.key==="chile-dice-answer-event"&&e.newValue){try{animateAnswerReveal(JSON.parse(e.newValue));}catch(err){}}if(e.key==="chile-dice-result-event"&&e.newValue){try{const event=JSON.parse(e.newValue);if(event.type==="steal-result"&&event.round===state.round)animateStealResult(!!event.success);}catch(err){}}if(e.key===KEY&&e.newValue){const incoming=JSON.parse(e.newValue);if(incoming.round!==state.round)lastPublicStrikes=0;const newStrike=incoming.strikes>lastPublicStrikes;const resultEvent=incoming.lastResultEvent;const newResult=!!(resultEvent&&resultEvent.stamp&&resultEvent.stamp!==lastPublicResultStamp);state=incoming;renderPublic();if(newStrike)animateErrorFlash();if(newResult){animateStealResult(!!resultEvent.success);lastPublicResultStamp=resultEvent.stamp;}lastPublicStrikes=state.strikes}});window.addEventListener("focus",()=>{const incoming=loadState();if(incoming.round!==state.round)lastPublicStrikes=0;const newStrike=incoming.strikes>lastPublicStrikes;const resultEvent=incoming.lastResultEvent;const newResult=!!(resultEvent&&resultEvent.stamp&&resultEvent.stamp!==lastPublicResultStamp);state=incoming;renderPublic();if(newStrike)animateErrorFlash();if(newResult){animateStealResult(!!resultEvent.success);lastPublicResultStamp=resultEvent.stamp;}lastPublicStrikes=state.strikes});return}
  $("saveTeams").addEventListener("click",()=>{state.teams=[$("teamAInput").value.trim()||"Equipo 1",$("teamBInput").value.trim()||"Equipo 2"];save();toast("Nombres de equipos guardados.")});
  $("turnA").addEventListener("click",()=>chooseTurn(0));$("turnB").addEventListener("click",()=>chooseTurn(1));$("correctBtn").addEventListener("click",correct);$("wrongBtn").addEventListener("click",wrong);$("stealCorrect").addEventListener("click",()=>steal(true));$("stealWrong").addEventListener("click",()=>steal(false));$("revealAll").addEventListener("click",()=>{state.revealed=currentRound().answers.map((_,i)=>i);finishRound(null,"Respuestas restantes reveladas. No se suman puntos adicionales.")});$("resetRound").addEventListener("click",resetRound);$("nextRound").addEventListener("click",nextRound);$("resetGame").addEventListener("click",resetGame);$("openPublic").addEventListener("click",openPublic);$("showQuestionBtn").addEventListener("click",()=>{state.questionVisible=true;setStatus("Pregunta publicada en la pantalla del público.");save()});$("continueRound").addEventListener("click",continueFromResult);$("enableResultSound").addEventListener("click",enableResultSound);
  $("teamAInput").value=state.teams[0];$("teamBInput").value=state.teams[1];window.addEventListener("storage",e=>{if(e.key===KEY&&e.newValue){state=loadState();render();toast("La partida se actualizó en otra ventana.")}});render()}
