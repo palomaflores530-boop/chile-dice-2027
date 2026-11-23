@@ -181,8 +181,8 @@ function wrong(){
   const failedTeam=state.turn;
   const duelEvent={type:"duel-miss",round:state.round,team:failedTeam,stamp:Date.now()+"-"+Math.random().toString(36).slice(2)};try{if(publicChannel)publicChannel.postMessage(duelEvent);}catch(e){}try{localStorage.setItem("chile-dice-duel-miss",JSON.stringify(duelEvent));}catch(e){}
   state.duelAttempts=(state.duelAttempts||0)+1;
-  if(state.duelAttempts===1){state.turn=1-failedTeam;setStatus("¡X! "+state.teams[failedTeam]+" falló. Ahora responde el capitán de "+state.teams[state.turn]+".");}
-  else{state.phase="playing";setStatus("¡Ambos capitanes fallaron! Comienza la ronda "+state.teams[state.turn]+".");}
+  state.turn=1-failedTeam;
+  setStatus("¡X! "+state.teams[failedTeam]+" falló. El duelo continúa: ahora responde el capitán de "+state.teams[state.turn]+".");
   save();return;
  }
  if(state.phase!=="playing")return;state.strikes++;try{if(publicChannel)publicChannel.postMessage({type:"strike",round:state.round,strikes:state.strikes});}catch(e){}if(state.strikes>=3){state.phase="steal";state.stealTeam=1-state.turn;setStatus("¡TERCER ERROR! "+state.teams[state.stealTeam]+" tiene la oportunidad de robar todos los puntos.");}else setStatus("¡Respuesta incorrecta! Error "+state.strikes+" de 3.");save()}
