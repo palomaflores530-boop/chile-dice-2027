@@ -26,7 +26,7 @@ const ROUNDS = [
 const PHOTO_ROUNDS = [
 {question:"Si te invitaran a narrar un partido, ¿qué deporte elegirías?",answers:[["Fútbol",50],["Vóleibol",19],["Tenis",8],["Atletismo",6],["Básquetbol",5],["Automovilismo",4],["Ajedrez",3]]},
 {question:"Además de arena, ¿dónde puedes escribir tu nombre con el dedo?",answers:[["Vidrio empañado",43],["Tierra",18],["Nieve",15],["Auto sucio",6],["Cemento fresco",5],["Barro",4],["Harina",3]]},
-{question:"¿Por cuál actividad te encantaría hacerte y te gustaría que te pagaran?",answers:[["Dormir",30],["Ver TV / series",15],["Viajar",14],["Cocinar",11],["Comer",10],["Hacer deportes",8],["Tejer / manualidades",6]]},
+{question:"¿Por cuál actividad que te encantaría hacer te gustaría que te pagaran?",answers:[["Dormir",30],["Ver TV / series",15],["Viajar",14],["Cocinar",11],["Comer",10],["Hacer deportes",8],["Tejer / manualidades",6]]},
 {question:"Nombra algo que puedes encontrar en el refrigerador.",answers:[["Leche",21],["Mantequilla / margarina",20],["Yogurt",15],["Queso",12],["Cerveza",11],["Verduras",10],["Mayonesa",8]]},
 {question:"Si llegas comiendo chicle a un restaurante, ¿dónde lo dejas?",answers:[["Servilleta",36],["Basurero",23],["Boleta / papel",19],["Cartera / billetera",8],["Debajo de la mesa",6],["Lo trago",5],["Lo tiro al piso",2]]},
 {question:"Nombra un sándwich que venden en un carrito.",answers:[["Completo",35],["Chacarero",13],["Potito",12],["Barros Luco",11],["Barros Jarpa",10],["Churrasco",9],["Ave mayo",6]]},
